@@ -1,0 +1,3150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pintura Pro Calculator 🎨</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          forest: '#1A3C34',
+          amber: '#D4871B',
+          cream: '#F8F6F1',
+        }
+      }
+    }
+  };
+</script>
+<style>
+  /* (Mismos estilos que antes) */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; background: #F8F6F1; color: #1C1C1C; min-height: 100vh; }
+  .ff-display { font-family: 'Fraunces', Georgia, serif; }
+
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: #F0EDE7; }
+  ::-webkit-scrollbar-thumb { background: #D4871B; border-radius: 10px; }
+
+  .inp {
+    width: 100%; padding: 10px 14px; border: 2px solid #E3DDD5; border-radius: 10px;
+    font-size: 14px; font-family: inherit; transition: border-color .15s, box-shadow .15s;
+    background: #fff; color: #1C1C1C; outline: none;
+  }
+  .inp:focus { border-color: #D4871B; box-shadow: 0 0 0 3px rgba(212,135,27,.12); }
+  .inp::placeholder { color: #B0A89A; }
+  select.inp { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236B6559' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 36px; }
+  textarea.inp { resize: vertical; }
+
+  .lbl { display: block; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: #6B6559; margin-bottom: 5px; }
+
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 10px 18px; border-radius: 10px; font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; transition: all .15s; border: none; text-decoration: none; white-space: nowrap; }
+  .btn:active { transform: scale(.97); }
+  .btn-primary { background: #1A3C34; color: #fff; }
+  .btn-primary:hover { background: #122B25; box-shadow: 0 4px 14px rgba(26,60,52,.3); }
+  .btn-amber { background: #D4871B; color: #fff; }
+  .btn-amber:hover { background: #B87018; box-shadow: 0 4px 14px rgba(212,135,27,.35); }
+  .btn-outline { background: #fff; color: #1A3C34; border: 2px solid #1A3C34; }
+  .btn-outline:hover { background: #F0F5F3; }
+  .btn-ghost { background: transparent; color: #6B6559; }
+  .btn-ghost:hover { background: #F0EDE7; color: #1A3C34; }
+  .btn-danger { background: #FEE2E2; color: #DC2626; }
+  .btn-danger:hover { background: #FECACA; }
+  .btn-sm { padding: 6px 13px; font-size: 12.5px; border-radius: 8px; }
+  .btn-lg { padding: 13px 28px; font-size: 15px; border-radius: 12px; }
+
+  .card { background: #fff; border-radius: 16px; box-shadow: 0 1px 3px rgba(0,0,0,.06), 0 4px 16px rgba(0,0,0,.04); overflow: hidden; }
+  .card-header { padding: 20px 24px 16px; border-bottom: 1px solid #F0EDE7; }
+  .card-body { padding: 20px 24px; }
+  .card-footer { padding: 16px 24px; border-top: 1px solid #F0EDE7; background: #FAFAF8; }
+
+  .tbl { width: 100%; border-collapse: collapse; }
+  .tbl th { padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: #8A8179; border-bottom: 2px solid #F0EDE7; background: #FAFAF8; white-space: nowrap; }
+  .tbl td { padding: 11px 14px; border-bottom: 1px solid #F5F2EE; font-size: 13.5px; }
+  .tbl tr:last-child td { border-bottom: none; }
+  .tbl tr:hover td { background: #FDFCFA; }
+
+  .bdg { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 100px; font-size: 11px; font-weight: 700; letter-spacing: .04em; }
+  .bdg-green { background: #DCFCE7; color: #15803D; }
+  .bdg-amber { background: #FEF3C7; color: #B45309; }
+  .bdg-forest { background: #DCE9E5; color: #1A3C34; }
+  .bdg-red { background: #FEE2E2; color: #DC2626; }
+  .bdg-gray { background: #F3F4F6; color: #6B7280; }
+
+  .nav-item { display: flex; align-items: center; gap: 9px; padding: 9px 14px; border-radius: 9px; cursor: pointer; transition: all .15s; font-size: 14px; font-weight: 500; color: #B8D3CB; border: none; background: transparent; font-family: inherit; }
+  .nav-item:hover { background: rgba(255,255,255,.1); color: #fff; }
+  .nav-item.active { background: #D4871B; color: #fff; }
+
+  .sdot { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; background: #E3DDD5; color: #8A8179; transition: all .2s; flex-shrink: 0; }
+  .sdot.active { background: #D4871B; color: #fff; }
+  .sdot.done { background: #1A3C34; color: #fff; }
+
+  .mode-card { cursor: pointer; border: 2px solid #E3DDD5; border-radius: 14px; padding: 22px; transition: all .2s; background: #fff; }
+  .mode-card:hover { border-color: #D4871B; background: #FDFAF5; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(212,135,27,.12); }
+  .mode-card.sel { border-color: #D4871B; background: #FDF5E8; box-shadow: 0 0 0 3px rgba(212,135,27,.15); }
+
+  .pcard { cursor: pointer; border: 2px solid #E3DDD5; border-radius: 10px; padding: 13px 16px; transition: all .15s; }
+  .pcard:hover { border-color: #D4871B; background: #FDFAF5; }
+  .pcard.sel { border-color: #1A3C34; background: #F0F5F3; }
+
+  .tog { display: none; }
+  .tog + label { position: relative; display: inline-block; width: 44px; height: 24px; background: #E3DDD5; border-radius: 100px; cursor: pointer; transition: background .2s; flex-shrink: 0; }
+  .tog + label::after { content: ''; position: absolute; width: 18px; height: 18px; background: #fff; border-radius: 50%; top: 3px; left: 3px; transition: transform .2s; box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+  .tog:checked + label { background: #1A3C34; }
+  .tog:checked + label::after { transform: translateX(20px); }
+
+  .pbar { height: 4px; background: #E3DDD5; border-radius: 100px; overflow: hidden; }
+  .pfill { height: 100%; background: #D4871B; border-radius: 100px; transition: width .4s ease; }
+
+  .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  @media(max-width:640px) { .g2 { grid-template-columns: 1fr; } .g3 { grid-template-columns: 1fr; } }
+  @media(min-width:641px) and (max-width:900px) { .g3 { grid-template-columns: 1fr 1fr; } }
+
+  .notif { position: fixed; top: 75px; right: 20px; padding: 11px 20px; border-radius: 10px; font-size: 14px; font-weight: 600; z-index: 9999; box-shadow: 0 4px 20px rgba(0,0,0,.18); animation: slideNotif .3s ease; }
+  .notif.ok { background: #1A3C34; color: #fff; }
+  .notif.err { background: #DC2626; color: #fff; }
+  @keyframes slideNotif { from { transform: translateX(80px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+  .fadein { animation: fadein .25s ease; }
+  @keyframes fadein { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: translateY(0); } }
+
+  #mob-nav { display: none; }
+  @media(max-width:768px) {
+    #desk-nav { display: none !important; }
+    #mob-nav { display: flex !important; }
+    #main-wrap { padding-bottom: 80px !important; }
+  }
+
+  .ring-amber { outline: 3px solid #D4871B; outline-offset: 2px; }
+  .arow { display: flex; gap: 8px; align-items: center; padding: 10px 12px; background: #FAFAF8; border-radius: 9px; border: 1px solid #F0EDE7; margin-bottom: 8px; flex-wrap: wrap; }
+  .arow .inp { padding: 8px 12px; }
+  .hr { height: 1px; background: #F0EDE7; margin: 16px 0; }
+</style>
+</head>
+<body>
+<div id="app" style="display:flex; flex-direction:column; min-height:100vh;">
+  <header style="background:#1A3C34; position:sticky; top:0; z-index:100; box-shadow:0 2px 12px rgba(0,0,0,.18);">
+    <div style="max-width:1200px; margin:0 auto; padding:0 20px; display:flex; align-items:center; justify-content:space-between; height:62px;">
+      <div style="display:flex; align-items:center; gap:12px; cursor:pointer;" onclick="showView('dashboard')">
+        <div style="width:38px; height:38px; background:#D4871B; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:20px;">🖌️</div>
+        <div>
+          <div class="ff-display" style="color:#fff; font-size:18px; font-weight:600; line-height:1.2;">Pintura Pro Calculator</div>
+          <div style="color:#80B5A8; font-size:11px; line-height:1.2;">Wellington, Nueva Zelanda</div>
+        </div>
+      </div>
+      <nav id="desk-nav" style="display:flex; align-items:center; gap:4px;">
+        <button class="nav-item" data-v="dashboard" onclick="showView('dashboard')">Dashboard</button>
+        <button class="nav-item" data-v="nueva" onclick="showView('nueva')">Nueva Cotización</button>
+        <button class="nav-item" data-v="guardadas" onclick="showView('guardadas')">Guardadas</button>
+        <button class="nav-item" data-v="productos" onclick="showView('productos')">Productos</button>
+        <button class="nav-item" data-v="config" onclick="showView('config')">Configuración</button>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main-wrap" style="flex:1; max-width:1200px; margin:0 auto; width:100%; padding:28px 20px;">
+    <div id="view-dashboard" class="fadein"></div>
+    <div id="view-nueva" style="display:none;" class="fadein"></div>
+    <div id="view-guardadas" style="display:none;" class="fadein"></div>
+    <div id="view-productos" style="display:none;" class="fadein"></div>
+    <div id="view-config" style="display:none;" class="fadein"></div>
+  </main>
+
+  <nav id="mob-nav" style="position:fixed; bottom:0; left:0; right:0; background:#fff; border-top:1px solid #E3DDD5; display:flex; align-items:center; justify-content:space-around; padding:6px 4px 10px; z-index:100; box-shadow:0 -2px 12px rgba(0,0,0,.08);">
+    <button onclick="showView('dashboard')" data-mv="dashboard" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 12px;border:none;background:transparent;cursor:pointer;font-family:inherit;font-size:11px;font-weight:600;color:#6B6559;border-radius:8px;transition:color .15s;">Inicio</button>
+    <button onclick="showView('nueva')" data-mv="nueva" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:0 12px;border:none;background:transparent;cursor:pointer;font-family:inherit;font-size:11px;font-weight:700;color:#D4871B;border-radius:8px;">Nueva</button>
+    <button onclick="showView('guardadas')" data-mv="guardadas" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 12px;border:none;background:transparent;cursor:pointer;font-family:inherit;font-size:11px;font-weight:600;color:#6B6559;border-radius:8px;transition:color .15s;">Guardadas</button>
+    <button onclick="showView('config')" data-mv="config" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 12px;border:none;background:transparent;cursor:pointer;font-family:inherit;font-size:11px;font-weight:600;color:#6B6559;border-radius:8px;transition:color .15s;">Config</button>
+  </nav>
+</div>
+
+<div id="modal-bg" onclick="closeModal()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;"></div>
+<div id="modal-wrap" style="display:none;position:fixed;inset:0;z-index:201;display:none;align-items:center;justify-content:center;padding:16px;">
+  <div id="modal-box" class="card" style="max-width:540px;width:100%;max-height:92vh;overflow-y:auto;"></div>
+</div>
+<div id="notifs"></div>
+<!-- ====== PERFIL DEL CLIENTE (full-page overlay) ====== -->
+<div id="profile-overlay" style="display:none; position:fixed; inset:0; background:#F8F6F1; z-index:300; overflow-y:auto;">
+  <div id="profile-content" style="max-width:1020px; margin:0 auto; padding:24px 20px 80px;"></div>
+</div>
+
+<script>
+// ================= DATA =================
+const DEFAULT_PRODUCTS = [
+  // ===== RESENE =====
+  // -- Interior --
+  { id:'r01', name:'Resene SpaceCote Flat',         brand:'Resene', type:'interior', sizes:[
+    { size:1, price:34.50 }, { size:2, price:56.00 }, { size:4, price:98.00 }, { size:10, price:195.00 }
+  ], coverage:11 },
+  { id:'r02', name:'Resene SpaceCote Low Sheen',    brand:'Resene', type:'interior', sizes:[
+    { size:1, price:36.50 }, { size:2, price:58.50 }, { size:4, price:102.00 }, { size:10, price:200.00 }
+  ], coverage:12 },
+  { id:'r03', name:'Resene Zylone Sheen',           brand:'Resene', type:'interior', sizes:[
+    { size:1, price:38.00 }, { size:2, price:60.00 }, { size:4, price:104.00 }, { size:10, price:210.00 }
+  ], coverage:12 },
+  { id:'r04', name:'Resene Ceiling White',          brand:'Resene', type:'interior', sizes:[
+    { size:1, price:28.00 }, { size:2, price:44.00 }, { size:4, price:75.00 }, { size:10, price:150.00 }
+  ], coverage:13 },
+  { id:'r04b', name:'Resene SpaceCote Flat Kitchen & Bathroom', brand:'Resene', type:'interior', sizes:[
+    { size:1, price:38.00 }, { size:2, price:62.00 }, { size:4, price:108.00 }, { size:10, price:215.00 }
+  ], coverage:10 },
+
+  // -- Exterior --
+  { id:'r05', name:'Resene Lumbersider',            brand:'Resene', type:'exterior', sizes:[
+    { size:1, price:39.00 }, { size:2, price:62.00 }, { size:4, price:110.00 }, { size:10, price:210.00 }
+  ], coverage:10 },
+  { id:'r06', name:'Resene Enamacryl',              brand:'Resene', type:'exterior', sizes:[
+    { size:1, price:50.50 }, { size:2, price:79.00 }, { size:4, price:138.00 }, { size:10, price:275.00 }
+  ], coverage:12 },
+  { id:'r07', name:'Resene Roof Paint',             brand:'Resene', type:'exterior', sizes:[
+    { size:4, price:120.00 }, { size:10, price:240.00 }
+  ], coverage:8 },
+
+  // -- Enamel --
+  { id:'r08', name:'Resene Waterborne Enamel',      brand:'Resene', type:'enamel', sizes:[
+    { size:1, price:52.00 }, { size:2, price:82.00 }, { size:4, price:142.00 }, { size:10, price:285.00 }
+  ], coverage:14 },
+
+  // -- Primer --
+  { id:'r09', name:'Resene Quick Dry Primer',       brand:'Resene', type:'primer', sizes:[
+    { size:1, price:29.00 }, { size:2, price:46.00 }, { size:4, price:80.00 }, { size:10, price:160.00 }
+  ], coverage:12 },
+  { id:'r09b', name:'Resene Waterborne Sureseal',   brand:'Resene', type:'primer', sizes:[
+    { size:1, price:32.00 }, { size:4, price:98.00 }, { size:10, price:195.00 }
+  ], coverage:10 },
+
+  // -- Filler --
+  { id:'r10', name:'Resene Broadwall Surface Prep & Seal', brand:'Resene', type:'filler', sizes:[
+    { size:4, price:107.90 }, { size:10, price:215.00 }
+  ], coverage:4 },
+
+  // ===== DULUX =====
+  // -- Interior --
+  { id:'d01', name:'Dulux Wash&Wear Low Sheen',     brand:'Dulux', type:'interior', sizes:[
+    { size:1, price:39.90 }, { size:2, price:62.00 }, { size:4, price:106.00 }, { size:10, price:210.00 }
+  ], coverage:12 },
+  { id:'d02', name:'Dulux Wash&Wear Flat',          brand:'Dulux', type:'interior', sizes:[
+    { size:1, price:37.50 }, { size:2, price:58.00 }, { size:4, price:99.00 }, { size:10, price:198.00 }
+  ], coverage:12 },
+  { id:'d03', name:'Dulux Ceiling White',           brand:'Dulux', type:'interior', sizes:[
+    { size:1, price:26.00 }, { size:2, price:42.00 }, { size:4, price:66.90 }, { size:10, price:135.00 }
+  ], coverage:14 },
+  { id:'d03b', name:'Dulux Wash&Wear +PLUS Kitchen&Bathroom', brand:'Dulux', type:'interior', sizes:[
+    { size:1, price:42.00 }, { size:2, price:68.00 }, { size:4, price:118.00 }, { size:10, price:235.00 }
+  ], coverage:12 },
+
+  // -- Exterior --
+  { id:'d04', name:'Dulux Weathershield Flat',      brand:'Dulux', type:'exterior', sizes:[
+    { size:1, price:42.00 }, { size:2, price:68.00 }, { size:4, price:118.00 }, { size:10, price:225.00 }
+  ], coverage:11 },
+  { id:'d05', name:'Dulux Weathershield Low Sheen', brand:'Dulux', type:'exterior', sizes:[
+    { size:1, price:44.00 }, { size:2, price:72.00 }, { size:4, price:133.90 }, { size:10, price:250.00 }
+  ], coverage:11 },
+  { id:'d06', name:'Dulux Roof & Trim',             brand:'Dulux', type:'exterior', sizes:[
+    { size:4, price:115.00 }, { size:10, price:230.00 }
+  ], coverage:9 },
+
+  // -- Enamel --
+  { id:'d07', name:'Dulux Aquanamel Semi-Gloss',    brand:'Dulux', type:'enamel', sizes:[
+    { size:1, price:46.00 }, { size:2, price:74.00 }, { size:4, price:141.50 }, { size:10, price:280.00 }
+  ], coverage:14 },
+
+  // -- Primer --
+  { id:'d08', name:'Dulux 1Step Prep Primer/Sealer/Undercoat', brand:'Dulux', type:'primer', sizes:[
+    { size:1, price:28.00 }, { size:2, price:44.00 }, { size:4, price:76.00 }, { size:10, price:150.00 }
+  ], coverage:12 },
+
+  // -- Filler --
+  { id:'d09', name:'Dulux Filler & Sealer',         brand:'Dulux', type:'filler', sizes:[
+    { size:4, price:69.90 }, { size:10, price:139.00 }
+  ], coverage:13 },
+];
+const DEFAULT_LABOR   = { ratePerWorker: 30 };
+const DEFAULT_SCOPE = {
+  basic:       '• Standard surface preparation (cleaning, sanding, masking)\n• Protection of furniture and floors\n• Primer on new or repaired areas\n• Two coats of top-quality paint\n• Minor crack filling',
+  recommended: '• All from Basic package\n• Detailed preparation up to level 4 (sanding, sealing, and filling)\n• High-grade paint with guarantee',
+  premium:     '• All from Recommended package\n• Preparation up to level 5 (fine sanding, specialised primers)\n• Premium paint finish\n• Final wash of entrances and/or the house exterior (where applicable)'
+};
+const DEFAULT_COMPANY = { name:'Wellington Painting Co.', phone:'', email:'', address:'Wellington, NZ', gst:'', logo:null };
+const JOB_TYPES = {
+  interior: { label:'Interior',        icon:'🏠', mult:1.00, en:'Interior Painting'    },
+  exterior: { label:'Exterior',        icon:'🏗️', mult:1.20, en:'Exterior Painting'    },
+  ceiling:  { label:'Techos',          icon:'📐', mult:1.10, en:'Ceiling Painting'     },
+  doors:    { label:'Puertas / Rejas', icon:'🚪', mult:1.50, en:'Doors & Gates'        },
+  mixed:    { label:'Mixto (Int/Ext)', icon:'🎨', mult:1.15, en:'Mixed (Interior/Exterior)' },
+};
+
+const PROD_TYPES = {
+  interior: 'Interior',
+  exterior: 'Exterior',
+  primer:   'Primer / Sealer',
+  filler:   'Enduido / Masilla',
+  enamel:   'Esmalte',
+};
+
+const SURFACE_TYPES = ['Pared', 'Techo', 'Puerta', 'Ventana', 'Otro'];
+
+// ================= MULTILENGUAJE =================
+const TRANSLATIONS = {
+  es: {
+    // General
+    app_name: 'Pintura Pro Calculator',
+    welcome: 'Bienvenido 👋',
+    new_quote: 'Nueva Cotización',
+    total_quotes: 'Total cotizaciones',
+    saved_in_system: 'guardadas en el sistema',
+    estimated_value: 'Valor estimado (recom.)',
+    includes_gst: 'incluye GST 15%',
+    configured_company: 'Empresa configurada',
+    edit_config: 'Editar configuración →',
+    search_client_profile: '👤 Buscar perfil de cliente →',
+    recent_quotes: 'Cotizaciones Recientes',
+    view_all: 'Ver todas →',
+    no_quotes_yet: 'No hay cotizaciones aún',
+    create_quote: 'Crear cotización',
+    quote_num: 'N°',
+    client: 'Cliente',
+    address: 'Dirección',
+    type: 'Tipo',
+    area: 'Área',
+    total_rec: 'Total Recom.',
+    date: 'Fecha',
+    actions: 'Acciones',
+    open: 'Abrir',
+    pdf: 'PDF',
+    profile: '👤 Perfil',
+    delete: '✕',
+    quote_by_m2: 'Cotización por m²',
+    quick_calc_m2: 'Calcula rápido basándose en la tarifa por m².',
+    use_m2_mode: 'Usar modo m² →',
+    quote_by_realcost: 'Cotización Costo Real',
+    exact_cost: 'Desglose exacto: materiales + mano de obra + margen.',
+    use_realcost_mode: 'Usar Costo Real →',
+    step_mode: 'Modo',
+    step_client: 'Cliente',
+    step_job: 'Trabajo',
+    step_labour: 'Mano de Obra',
+    step_result: 'Resultado',
+    back: '← Volver',
+    next: 'Siguiente →',
+    calculate: 'Calcular Presupuesto',
+    save_quote: '💾 Guardar',
+    generate_pdf: '📄 Generar PDF',
+    edit: '← Editar',
+    how_quote: '¿Cómo quieres cotizar?',
+    per_m2_title: 'Por m²',
+    per_m2_desc: 'Precio por m² con multiplicador de tipo de trabajo.',
+    realcost_title: 'Costo Real',
+    realcost_desc: 'Material + labor + margen.',
+    base_rate_per_m2: 'Tarifa base por m² (NZD)',
+    client_data: 'Datos del Cliente',
+    name: 'Nombre *',
+    phone: 'Teléfono',
+    email: 'Email',
+    address_label: 'Dirección *',
+    job_type: 'Tipo de trabajo',
+    coats: 'Manos de pintura',
+    surfaces: 'Superficies a pintar',
+    add_surface: '+ Agregar superficie',
+    primer_sealer: 'Primer / Sealer',
+    filler_putty: 'Enduido / Masilla',
+    extra_materials: 'Materiales Adicionales',
+    add_material: '+ Agregar material',
+    from_database: '+ Desde base de datos',
+    notes: 'Notas adicionales...',
+    sprayer_label: '🖌️ Sprayer (+30%)',
+    labour_title: 'Mano de Obra y Costos Extras',
+    workers_qty: 'Cantidad de trabajadores',
+    est_hours: 'Horas estimadas',
+    scaffolding_rent: 'Alquiler de andamios (NZD)',
+    include_sprayer: 'Incluir Sprayer',
+    sprayer_cost: 'Costo adicional (NZD)',
+    margins_title: 'Márgenes (%)',
+    base_margin: 'Base',
+    recommended_margin: 'Recomendado',
+    premium_margin: 'Premium',
+    quote_for: 'Cotización para',
+    recommended_price: 'Precio Recomendado',
+    total_area: 'Área Total',
+    materials: 'Materiales',
+    labour_cost: 'Mano de Obra',
+    mode: 'Modo',
+    per_m2_mode: 'Por m²',
+    realcost_mode: 'Costo Real',
+    breakdown: 'Desglose de Materiales',
+    cat: 'Cat.',
+    description: 'Descripción',
+    qty: 'Cant.',
+    unit_price: 'P. Unit.',
+    total: 'Total',
+    base_package: 'Base',
+    recommended_package: 'Recomendado',
+    premium_package: 'Premium',
+    entry_level: 'Entry level pricing',
+    best_value: 'Best value — most popular',
+    premium_quality: 'Premium quality finish',
+    config_title: 'Configuración',
+    company_data: 'Datos de la Empresa',
+    company_name: 'Nombre de la empresa *',
+    company_phone: 'Teléfono',
+    company_email: 'Email',
+    company_address: 'Dirección',
+    gst_number: 'Número GST',
+    save_company: '💾 Guardar Datos Empresa',
+    labour_rates: 'Tarifas de Mano de Obra',
+    rate_per_worker: 'Tarifa por trabajador/hora',
+    save_rate: '💾 Guardar Tarifa',
+    default_margins_info: '💡 Márgenes por defecto',
+    margins_explanation: 'Los márgenes de ganancia se configuran en cada cotización de tipo <strong>Costo Real</strong> (Paso 4 del wizard).',
+    work_scope: 'Alcance del Trabajo (Pricing Options)',
+    scope_description: 'Describe qué incluye cada nivel de cotización',
+    save_scope: '💾 Guardar Alcance',
+    language: 'Idioma / Language',
+    select_language: 'Selecciona el idioma',
+    product_db: 'Base de Datos de Productos',
+    reset_products: '↺ Restablecer',
+    new_product: '+ Nuevo',
+    all_products: 'Todos',
+    name_product: 'Nombre',
+    brand: 'Marca',
+    product_type: 'Tipo',
+    container: 'Envase',
+    price_container: '$/Envase',
+    price_litre: '$/Litro',
+    coverage: 'Rendimiento',
+    edit_product: 'Editar',
+    delete_product: '✕',
+    client_profile: 'Perfil del Cliente',
+    save_profile: '💾 Guardar perfil',
+    info_tab: '👤 Información',
+    photos_tab: '📷 Fotos',
+    history_tab: '📋 Historial',
+    technical_tab: '🎨 Técnico',
+    payments_tab: '💰 Pagos',
+    notes_tab: '📝 Notas',
+    financial_summary: '💰 Resumen Financiero',
+    billed_total: 'Facturado',
+    pending_balance: 'Pendiente',
+    up_to_date: 'Al día ✅',
+    painting_quotation: 'PAINTING QUOTATION',
+    quote_no: 'Quote No:',
+    date_label: 'Date:',
+    valid_days: 'Valid for 30 days',
+    bill_to: 'BILL TO / CLIENT',
+    project_details: 'PROJECT DETAILS',
+    total_area_label: 'Total Area:',
+    coats_label: 'Coats:',
+    workers_label: 'Workers:',
+    hours_label: 'Hours:',
+    mode_label: 'Mode:',
+    per_m2_pdf: 'Per m²',
+    actual_cost_pdf: 'Actual Cost',
+    additional_costs: 'ADDITIONAL COSTS & SERVICES',
+    no_additional_costs: 'No additional costs or services included.',
+    pricing_options: 'PRICING OPTIONS — Choose the package that suits you best',
+    terms_conditions: 'TERMS & CONDITIONS',
+    deposit_term: '• A 50% deposit is required upon acceptance to confirm the booking and schedule commencement.',
+    balance_term: '• Remaining balance is due upon satisfactory completion of all agreed works.',
+    valid_term: '• This quotation is valid for 30 days from the date above. After this period, prices may be subject to change.',
+    unforeseen_term: '• Any unforeseen structural issues, extensive surface repairs, or additional preparation work will be quoted separately.',
+    gst_term: '• All prices include GST at 15%.',
+    colors_term: '• Paint colours and finishes as agreed with client. Any changes to specification may affect the final price.',
+    access_term: '• Client to ensure clear and safe access to all areas requiring painting on agreed commencement date.',
+    plants_term: '• When working outdoors near plants and gardens, surrounding vegetation may be affected due to the nature of the work. To minimise potential damage, the use of scaffolding is strongly recommended.',
+    acceptance: 'ACCEPTANCE',
+    acceptance_text: 'I/We accept the above quotation and authorise work to proceed:',
+    signature: 'Signature',
+    delete_confirm: '¿Eliminar esta cotización?',
+    quote_deleted: 'Cotización eliminada',
+    quote_saved: '✓ Cotización guardada',
+    pdf_generated: '✓ PDF generado correctamente',
+    no_data_pdf: 'No hay datos para el PDF',
+    upload_photos: 'Subir Fotos',
+    photo_type: 'Tipo de foto',
+    before: '📸 Antes (Before)',
+    after: '✨ Después (After)',
+    caption_placeholder: 'Ej: Sala norte – antes de preparar',
+    select_photos: 'Seleccionar fotos',
+    photo_limit: 'Puedes seleccionar varias fotos a la vez. Máx 5 MB c/u.',
+    no_photos: 'No hay fotos en esta categoría.',
+    download_photo: '⬇ Descargar',
+    delete_photo_confirm: '¿Eliminar esta foto?',
+    photo_deleted: 'Foto eliminada',
+    register_payment: 'Registrar Pago',
+    payment_date: 'Fecha',
+    payment_type: 'Tipo de registro',
+    payment_amount: 'Monto (NZD) *',
+    payment_method: 'Método de pago',
+    payment_status: 'Estado',
+    payment_desc: 'Descripción (opcional)',
+    add_payment: '+ Agregar pago',
+    no_payments: 'No hay pagos registrados aún.',
+    payment_record: 'Registro de Pagos',
+    surface_name: 'Nombre',
+    litres: 'Litros',
+    step: 'Paso',
+    of: 'de',
+    pending_invoices: 'Facturas por Cobrar',
+    overdue: 'vencidas',
+    upcoming: 'próximas a vencer',
+    overdue_by: 'Vencida hace',
+    due_in: 'Vence en',
+    days: 'días',
+    pending_amount: 'Pendiente',
+    view_profile: 'Ver perfil',
+    recommended_badge: '⭐ Recomendado',
+needed: 'necesarios',
+surface: 'Superficie',
+total_materials: 'Total Materiales',
+margin: 'Margen',
+configurable_in: 'configurable en',
+in_labour: 'en mano de obra',
+  },
+  en: {
+    app_name: 'Pintura Pro Calculator',
+    welcome: 'Welcome 👋',
+    new_quote: 'New Quote',
+    total_quotes: 'Total quotes',
+    saved_in_system: 'saved in system',
+    estimated_value: 'Estimated value (recom.)',
+    includes_gst: 'includes 15% GST',
+    configured_company: 'Configured company',
+    edit_config: 'Edit configuration →',
+    search_client_profile: '👤 Search client profile →',
+    recent_quotes: 'Recent Quotes',
+    view_all: 'View all →',
+    no_quotes_yet: 'No quotes yet',
+    create_quote: 'Create quote',
+    quote_num: 'Quote #',
+    client: 'Client',
+    address: 'Address',
+    type: 'Type',
+    area: 'Area',
+    total_rec: 'Total Rec.',
+    date: 'Date',
+    actions: 'Actions',
+    open: 'Open',
+    pdf: 'PDF',
+    profile: '👤 Profile',
+    delete: '✕',
+    quote_by_m2: 'Quote by m²',
+    quick_calc_m2: 'Fast calculation based on rate per m².',
+    use_m2_mode: 'Use m² mode →',
+    quote_by_realcost: 'Actual Cost Quote',
+    exact_cost: 'Exact breakdown: materials + labour + margin.',
+    use_realcost_mode: 'Use Actual Cost →',
+    step_mode: 'Mode',
+    step_client: 'Client',
+    step_job: 'Job',
+    step_labour: 'Labour',
+    step_result: 'Result',
+    back: '← Back',
+    next: 'Next →',
+    calculate: 'Calculate Quote',
+    save_quote: '💾 Save',
+    generate_pdf: '📄 Generate PDF',
+    edit: '← Edit',
+    how_quote: 'How would you like to quote?',
+    per_m2_title: 'Per m²',
+    per_m2_desc: 'Price per m² with job type multiplier.',
+    realcost_title: 'Actual Cost',
+    realcost_desc: 'Materials + labour + margin.',
+    base_rate_per_m2: 'Base rate per m² (NZD)',
+    client_data: 'Client Data',
+    name: 'Name *',
+    phone: 'Phone',
+    email: 'Email',
+    address_label: 'Address *',
+    job_type: 'Job type',
+    coats: 'Coats of paint',
+    surfaces: 'Surfaces to paint',
+    add_surface: '+ Add surface',
+    primer_sealer: 'Primer / Sealer',
+    filler_putty: 'Filler / Putty',
+    extra_materials: 'Extra Materials',
+    add_material: '+ Add material',
+    from_database: '+ From database',
+    notes: 'Additional notes...',
+    sprayer_label: '🖌️ Sprayer (+30%)',
+    labour_title: 'Labour and Extra Costs',
+    workers_qty: 'Number of workers',
+    est_hours: 'Estimated hours',
+    scaffolding_rent: 'Scaffolding rental (NZD)',
+    include_sprayer: 'Include Sprayer',
+    sprayer_cost: 'Additional cost (NZD)',
+    margins_title: 'Margins (%)',
+    base_margin: 'Base',
+    recommended_margin: 'Recommended',
+    premium_margin: 'Premium',
+    quote_for: 'Quote for',
+    recommended_price: 'Recommended Price',
+    total_area: 'Total Area',
+    materials: 'Materials',
+    labour_cost: 'Labour',
+    mode: 'Mode',
+    per_m2_mode: 'Per m²',
+    realcost_mode: 'Actual Cost',
+    breakdown: 'Materials Breakdown',
+    cat: 'Cat.',
+    description: 'Description',
+    qty: 'Qty',
+    unit_price: 'Unit Price',
+    total: 'Total',
+    base_package: 'Base',
+    recommended_package: 'Recommended',
+    premium_package: 'Premium',
+    entry_level: 'Entry level pricing',
+    best_value: 'Best value — most popular',
+    premium_quality: 'Premium quality finish',
+    config_title: 'Configuration',
+    company_data: 'Company Data',
+    company_name: 'Company name *',
+    company_phone: 'Phone',
+    company_email: 'Email',
+    company_address: 'Address',
+    gst_number: 'GST number',
+    save_company: '💾 Save Company Data',
+    labour_rates: 'Labour Rates',
+    rate_per_worker: 'Rate per worker/hour',
+    save_rate: '💾 Save Rate',
+    default_margins_info: '💡 Default margins',
+    margins_explanation: 'Profit margins are set in each <strong>Actual Cost</strong> quote (Step 4 of the wizard).',
+    work_scope: 'Work Scope (Pricing Options)',
+    scope_description: 'Describes what each pricing level includes',
+    save_scope: '💾 Save Scope',
+    language: 'Language / Idioma',
+    select_language: 'Select language',
+    product_db: 'Product Database',
+    reset_products: '↺ Reset',
+    new_product: '+ New',
+    all_products: 'All',
+    name_product: 'Name',
+    brand: 'Brand',
+    product_type: 'Type',
+    container: 'Container',
+    price_container: '$/Container',
+    price_litre: '$/Litre',
+    coverage: 'Coverage',
+    edit_product: 'Edit',
+    delete_product: '✕',
+    client_profile: 'Client Profile',
+    save_profile: '💾 Save profile',
+    info_tab: '👤 Information',
+    photos_tab: '📷 Photos',
+    history_tab: '📋 History',
+    technical_tab: '🎨 Technical',
+    payments_tab: '💰 Payments',
+    notes_tab: '📝 Notes',
+    financial_summary: '💰 Financial Summary',
+    billed_total: 'Billed',
+    pending_balance: 'Pending',
+    up_to_date: 'Up to date ✅',
+    painting_quotation: 'PAINTING QUOTATION',
+    quote_no: 'Quote No:',
+    date_label: 'Date:',
+    valid_days: 'Valid for 30 days',
+    bill_to: 'BILL TO / CLIENT',
+    project_details: 'PROJECT DETAILS',
+    total_area_label: 'Total Area:',
+    coats_label: 'Coats:',
+    workers_label: 'Workers:',
+    hours_label: 'Hours:',
+    mode_label: 'Mode:',
+    per_m2_pdf: 'Per m²',
+    actual_cost_pdf: 'Actual Cost',
+    additional_costs: 'ADDITIONAL COSTS & SERVICES',
+    no_additional_costs: 'No additional costs or services included.',
+    pricing_options: 'PRICING OPTIONS — Choose the package that suits you best',
+    terms_conditions: 'TERMS & CONDITIONS',
+    deposit_term: '• A 50% deposit is required upon acceptance to confirm the booking and schedule commencement.',
+    balance_term: '• Remaining balance is due upon satisfactory completion of all agreed works.',
+    valid_term: '• This quotation is valid for 30 days from the date above. After this period, prices may be subject to change.',
+    unforeseen_term: '• Any unforeseen structural issues, extensive surface repairs, or additional preparation work will be quoted separately.',
+    gst_term: '• All prices include GST at 15%.',
+    colors_term: '• Paint colours and finishes as agreed with client. Any changes to specification may affect the final price.',
+    access_term: '• Client to ensure clear and safe access to all areas requiring painting on agreed commencement date.',
+    plants_term: '• When working outdoors near plants and gardens, surrounding vegetation may be affected due to the nature of the work. To minimise potential damage, the use of scaffolding is strongly recommended.',
+    acceptance: 'ACCEPTANCE',
+    acceptance_text: 'I/We accept the above quotation and authorise work to proceed:',
+    signature: 'Signature',
+    delete_confirm: 'Delete this quote?',
+    quote_deleted: 'Quote deleted',
+    quote_saved: '✓ Quote saved',
+    pdf_generated: '✓ PDF generated successfully',
+    no_data_pdf: 'No data for PDF',
+    upload_photos: 'Upload Photos',
+    photo_type: 'Photo type',
+    before: '📸 Before',
+    after: '✨ After',
+    caption_placeholder: 'E.g., North living room – before prep',
+    select_photos: 'Select photos',
+    photo_limit: 'You can select multiple photos at once. Max 5 MB each.',
+    no_photos: 'No photos in this category.',
+    download_photo: '⬇ Download',
+    delete_photo_confirm: 'Delete this photo?',
+    photo_deleted: 'Photo deleted',
+    register_payment: 'Register Payment',
+    payment_date: 'Date',
+    payment_type: 'Record type',
+    payment_amount: 'Amount (NZD) *',
+    payment_method: 'Payment method',
+    payment_status: 'Status',
+    payment_desc: 'Description (optional)',
+    add_payment: '+ Add payment',
+    no_payments: 'No payments recorded yet.',
+    payment_record: 'Payment Records',
+    surface_name: 'Name',
+    litres: 'Litres',
+    step: 'Step',
+    of: 'of',
+    pending_invoices: 'Invoices Due',
+    overdue: 'overdue',
+    upcoming: 'upcoming',
+    overdue_by: 'Overdue by',
+    due_in: 'Due in',
+    days: 'days',
+    pending_amount: 'Pending',
+    view_profile: 'View profile',
+    recommended_badge: '⭐ Recommended',
+needed: 'needed',
+surface: 'Surface',
+total_materials: 'Total Materials',
+margin: 'Margin',
+configurable_in: 'configurable in',
+in_labour: 'in labour',
+  }
+};
+
+let currentLang = 'es'; // default
+
+function t(key) {
+  return TRANSLATIONS[currentLang]?.[key] || TRANSLATIONS.es[key] || key;
+}
+
+function setLanguage(lang) {
+  if (TRANSLATIONS[lang]) {
+    currentLang = lang;
+    localStorage.setItem('ppc_lang', lang);
+    // Recargar la vista actual
+    const view = CV;
+    if (view === 'dashboard') renderDashboard();
+    else if (view === 'nueva') renderNueva();
+    else if (view === 'guardadas') renderGuardadas();
+    else if (view === 'productos') renderProductos();
+    else if (view === 'config') renderConfig();
+  }
+}
+
+// ================= STATE =================
+let CV        = 'dashboard';
+let QS        = 0;
+let QD        = null;
+let QR        = null;
+let PFILTER   = 'all';
+
+function freshQuote() {
+  return {
+    id: null, createdAt: null,
+    mode: 'm2',
+    client: { name:'', address:'', phone:'', email:'' },
+    jobType: 'interior',
+    areas: [{ label:'Paredes', m2:'', surfaceType:'Pared', measureMode:'m2', qty:1, price:0, id:'a0', spray:false }],
+    areaProducts: {},   // <-- Añadido
+    coats: 2, workers: 2, hours: 8, scaffolding: 0,
+    products: {},
+    usePrimer: true, useFiller: false,
+    margins: { base:10, recommended:35, premium:45 },
+    m2Rate: 25, notes: '',
+    extraMaterials: [],
+    sprayer: { include: false, cost: 0 }
+  };
+}
+
+// ================= DB =================
+const DB = {
+  getProducts: ()    => JSON.parse(localStorage.getItem('ppc_products') || 'null') || DEFAULT_PRODUCTS,
+  saveProducts: (p)  => localStorage.setItem('ppc_products', JSON.stringify(p)),
+  getLabor: ()       => JSON.parse(localStorage.getItem('ppc_labor') || 'null') || DEFAULT_LABOR,
+  saveLabor: (l)     => localStorage.setItem('ppc_labor', JSON.stringify(l)),
+  getCompany: ()     => JSON.parse(localStorage.getItem('ppc_company') || 'null') || DEFAULT_COMPANY,
+  saveCompany: (c)   => localStorage.setItem('ppc_company', JSON.stringify(c)),
+  getQuotes: ()      => JSON.parse(localStorage.getItem('ppc_quotes') || '[]'),
+  saveQuote: (q) => {
+    const qs = DB.getQuotes();
+    const i  = qs.findIndex(x => x.id === q.id);
+    if (i >= 0) qs[i] = q; else qs.unshift(q);
+    localStorage.setItem('ppc_quotes', JSON.stringify(qs));
+  },
+  deleteQuote: (id)  => localStorage.setItem('ppc_quotes', JSON.stringify(DB.getQuotes().filter(q => q.id !== id))),
+  getQuoteById: (id) => DB.getQuotes().find(q => q.id === id),
+getScope: ()       => JSON.parse(localStorage.getItem('ppc_scope') || 'null') || DEFAULT_SCOPE,
+saveScope: (s)     => localStorage.setItem('ppc_scope', JSON.stringify(s)),
+};
+
+// ================= UTILS =================
+function gid()  { return Date.now().toString(36) + Math.random().toString(36).slice(2,6).toUpperCase(); }
+function fmt(n) { return '$' + (+n||0).toLocaleString('en-NZ', {minimumFractionDigits:2, maximumFractionDigits:2}); }
+function fmtN(n){ return (+n||0).toLocaleString('en-NZ', {minimumFractionDigits:2, maximumFractionDigits:2}); }
+function todayStr(){ return new Date().toLocaleDateString('en-NZ', {day:'2-digit', month:'long', year:'numeric'}); }
+function qNum(id){ return 'Q-' + String(id||'').slice(-6).toUpperCase(); }
+function notify(msg, type='ok') {
+  const c = document.getElementById('notifs');
+  const n = document.createElement('div');
+  n.className = `notif ${type}`;
+  n.textContent = msg;
+  c.appendChild(n);
+  setTimeout(() => { n.style.opacity='0'; n.style.transition='opacity .4s'; }, 2600);
+  setTimeout(() => n.remove(), 3100);
+}
+function showView(v) {
+  CV = v;
+  ['dashboard','nueva','guardadas','productos','config'].forEach(name => {
+    const el = document.getElementById('view-' + name);
+    if (el) el.style.display = (name === v) ? 'block' : 'none';
+  });
+  document.querySelectorAll('[data-v]').forEach(el => el.classList.toggle('active', el.dataset.v === v));
+  document.querySelectorAll('[data-mv]').forEach(el => el.style.color = el.dataset.mv === v ? '#D4871B' : '#6B6559');
+  const renders = { dashboard:renderDashboard, nueva:renderNueva, guardadas:renderGuardadas, productos:renderProductos, config:renderConfig };
+  if (renders[v]) renders[v]();
+  window.scrollTo(0,0);
+}
+
+// ================= CALCULATOR =================
+function calculate(q) {
+  const prods = DB.getProducts();
+  const lbr   = DB.getLabor();
+
+  const items = [];
+  let totalMat = 0;
+
+  // Agrupar m² por tipo de superficie y sumar unidades fijas
+  const areaGroups = {};
+  q.areas.forEach(a => {
+    if (a.measureMode === 'm2') {
+      const m2 = parseFloat(a.m2) || 0;
+      if (m2 > 0) areaGroups[a.surfaceType] = (areaGroups[a.surfaceType] || 0) + m2;
+    } else {
+      const qty = parseInt(a.qty) || 0;
+      const price = parseFloat(a.price) || 0;
+      const cost = qty * price;
+      // No agregar fixed item aquí si el área es Puerta/Ventana/Otro con litros manuales (se agrega después)
+      if (cost > 0 && !(['Puerta','Ventana','Otro'].includes(a.surfaceType) && (parseFloat(a.manualLitres) || 0) > 0)) {
+        totalMat += cost;
+        items.push({ cat:'Fixed Item', desc: `${a.label} (${a.surfaceType})`, qty, unit:'units', unitCost:price, total:cost });
+      }
+    }
+  });
+
+  const totalM2 = Object.values(areaGroups).reduce((a,b)=>a+b,0);
+
+  // Función auxiliar para calcular pintura con combinación óptima de envases
+  const addPaintWithBestSize = (prod, litresNeeded, coats, cat, descPrefix, applyWaste = true) => {
+    if (!prod || !prod.sizes || prod.sizes.length === 0) return;
+
+    const litres = applyWaste ? litresNeeded * 1.18 : litresNeeded;
+    const sizes = prod.sizes.slice().sort((a, b) => a.size - b.size);
+
+    let bestCombo = null;
+    let bestCost = Infinity;
+
+    const maxQty = sizes.map(sz => Math.min(20, Math.ceil(litres / sz.size) + 2));
+
+    const tryCombinations = (index, currentCombo, currentLitres, currentCost) => {
+      if (currentCost >= bestCost) return;
+      if (currentLitres >= litres) {
+        if (currentCost < bestCost) {
+          bestCost = currentCost;
+          bestCombo = currentCombo.map(c => ({...c}));
+        }
+        return;
+      }
+      if (index >= sizes.length) return;
+      const sz = sizes[index];
+      for (let qty = 0; qty <= maxQty[index]; qty++) {
+        const newLitres = currentLitres + qty * sz.size;
+        const newCost = currentCost + qty * sz.price;
+        if (newCost >= bestCost) break;
+        const newCombo = currentCombo.concat([{ size: sz.size, price: sz.price, qty }]);
+        tryCombinations(index + 1, newCombo, newLitres, newCost);
+        if (newLitres >= litres) break;
+      }
+    };
+
+    tryCombinations(0, [], 0, 0);
+
+    if (bestCombo && bestCombo.length > 0) {
+      const usedSizes = bestCombo.filter(c => c.qty > 0).sort((a, b) => b.size - a.size);
+      const comboDesc = usedSizes.map(c => `${c.qty} × ${c.size}L`).join(' + ');
+      const totalContainers = usedSizes.reduce((sum, c) => sum + c.qty, 0);
+
+      totalMat += bestCost;
+      const desc = `${prod.name} (${descPrefix}, ${coats} coat${coats>1?'s':''})`;
+
+      const areaMatch = descPrefix.match(/([\d.]+)\s*m²/);
+      const areaM2 = areaMatch ? areaMatch[1] : null;
+      items.push({
+        cat,
+        desc,
+        qty: totalContainers,
+        unit: comboDesc,
+        litres: litres.toFixed(1),
+        unitCost: bestCost,
+        total: bestCost,
+        areaInfo: descPrefix,
+        areaM2: areaM2
+      });
+    }
+  };
+
+    // Pintura por área individual (usa areaProducts)
+  q.areas.forEach((a, i) => {
+    // Asegurar ID único para cada área
+    if (!a.id) a.id = 'a' + i + '_' + Date.now();
+    
+    const prodId = q.areaProducts && q.areaProducts[a.id];
+    if (!prodId) return; // sin producto seleccionado
+    
+    const prod = prods.find(p => p.id === prodId);
+    if (!prod) return;
+    
+    const sprayMultiplier = a.spray ? 1.30 : 1.0;
+    
+    // --- Caso 1: Litros manuales (Puerta/Ventana/Otro con valor > 0) ---
+    const manualLitres = parseFloat(a.manualLitres) || 0;
+    if (['Puerta','Ventana','Otro'].includes(a.surfaceType) && manualLitres > 0) {
+      // litros manuales YA incluyen el spray si corresponde, solo añadir desperdicio
+      const litresBase = manualLitres * sprayMultiplier;  // NO multiplicar por 1.18 aquí
+            addPaintWithBestSize(prod, litresBase, q.coats, 'Paint', `${a.label || 'Área'} (${a.surfaceType}, ${manualLitres.toFixed(1)}L manual)`, false);
+      
+      // Agregar costo fijo si es unidad fija
+      if (a.measureMode !== 'm2') {
+        const qty = parseInt(a.qty) || 0;
+        const price = parseFloat(a.price) || 0;
+        const cost = qty * price;
+        if (cost > 0) {
+          totalMat += cost;
+          items.push({ cat:'Fixed Item', desc: `${a.label} (${a.surfaceType})`, qty, unit:'units', unitCost:price, total:cost });
+        }
+      }
+      return;
+    }
+    
+    // --- Caso 2: Modo m² (cálculo normal) ---
+    if (a.measureMode === 'm2') {
+      const m2 = parseFloat(a.m2) || 0;
+      if (m2 > 0) {
+        addPaintWithBestSize(prod, (m2 / prod.coverage) * q.coats * sprayMultiplier, q.coats, 'Paint', `${a.label || 'Área'} (${a.surfaceType}, ${m2.toFixed(1)} m²)`);
+      }
+      return;
+    }
+    
+    // --- Caso 3: Modo fixed sin litros manuales ---
+    // (ya se manejó en el primer bucle de áreas, aquí no se agrega pintura)
+  });
+
+  // Primer global
+  if (totalM2 > 0 && q.usePrimer && q.products.primer) {
+    const prim = prods.find(p => p.id === q.products.primer);
+    addPaintWithBestSize(prim, totalM2 / prim.coverage, 1, 'Primer/Sealer', '1 coat');
+  }
+
+  // Filler global
+  if (totalM2 > 0 && q.useFiller && q.products.filler) {
+    const fill = prods.find(p => p.id === q.products.filler);
+    addPaintWithBestSize(fill, totalM2 / fill.coverage, 1, 'Filler/Putty', '');
+  }
+
+  // Consumibles automáticos (solo si hay superficie en m²)
+  if (totalM2 > 0) {
+    const cons = [
+      { cat:'Consumables', desc:'Sandpaper / Abrasives',        qty:Math.max(2, Math.ceil(totalM2/15)),  unit:'sheets', unitCost:3.50  },
+      { cat:'Consumables', desc:'Masking Tape',                  qty:Math.max(1, Math.ceil(totalM2/25)),  unit:'rolls',  unitCost:8.50  },
+      { cat:'Consumables', desc:'Protective Plastic Sheeting',   qty:Math.max(1, Math.ceil(totalM2/40)),  unit:'rolls',  unitCost:14.00 },
+      { cat:'Consumables', desc:'Paint Rollers & Frames',        qty:Math.max(2, Math.ceil(totalM2/80)+1),unit:'units',  unitCost:13.00 },
+      { cat:'Consumables', desc:'Brushes & Applicators',         qty:parseInt(q.workers)||2,              unit:'sets',   unitCost:18.00 },
+    ];
+    cons.forEach(c => { c.total = c.qty * c.unitCost; totalMat += c.total; items.push(c); });
+  }
+
+  // Materiales extra
+  (q.extraMaterials || []).forEach(em => {
+    const cost = (parseFloat(em.qty)||0) * (parseFloat(em.unitCost)||0);
+    if (cost > 0) {
+      totalMat += cost;
+      items.push({ cat:'Extra Material', desc: em.desc, qty:parseFloat(em.qty), unit:'units', unitCost:parseFloat(em.unitCost), total:cost });
+    }
+  });
+
+  // Andamios
+  if (q.scaffolding > 0) {
+    totalMat += q.scaffolding;
+    items.push({ cat:'Equipment', desc:'Scaffolding Rental', qty:1, unit:'rental', unitCost:q.scaffolding, total:q.scaffolding });
+  }
+
+  // Sprayer
+  if (q.sprayer && q.sprayer.include && q.sprayer.cost > 0) {
+    totalMat += q.sprayer.cost;
+    items.push({ cat:'Service', desc:'Sprayer Application', qty:1, unit:'service', unitCost:q.sprayer.cost, total:q.sprayer.cost });
+  }
+
+  // Mano de obra
+  const ratePerWorker = lbr.ratePerWorker || 30;
+  const numWorkers = parseInt(q.workers) || 1;
+  const hours = parseFloat(q.hours) || 0;
+  const lbrCost = hours * ratePerWorker * numWorkers;
+
+  const totalCost = totalMat + lbrCost;
+
+  // Escenarios
+  const scen = (label, marginPct, m2Mult) => {
+    let sub;
+    if (q.mode === 'm2') {
+      sub = totalM2 * (parseFloat(q.m2Rate)||25) * (JOB_TYPES[q.jobType]?.mult||1) * m2Mult;
+    } else {
+      sub = totalCost * (1 + marginPct / 100);
+    }
+    const gst = sub * 0.15;
+    return { label, materials:totalMat, labour:lbrCost, subtotal:sub, gst, total:sub+gst, margin:marginPct };
+  };
+
+  return {
+    totalM2, items, totalMat, lbrCost, lbrRate: ratePerWorker, totalCost,
+    scenarios: {
+      base:        scen('Base',        q.margins.base,        1.00),
+      recommended: scen('Recommended', q.margins.recommended, 1.15),
+      premium:     scen('Premium',     q.margins.premium,     1.30),
+    }
+  };
+}
+
+// ================= VIEWS =================
+
+// ---- Dashboard ----
+function renderDashboard() {
+  const quotes  = DB.getQuotes();
+  const company = DB.getCompany();
+  const recent  = quotes.slice(0, 6);
+  const totalRev = quotes.reduce((s,q) => s + (q.result?.scenarios?.recommended?.total||0), 0);
+  document.getElementById('view-dashboard').innerHTML = `
+  <div class="fadein">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:24px;">
+      <div>
+        <h1 class="ff-display" style="font-size:32px;font-weight:700;color:#1A3C34;line-height:1.15;">${t('welcome')}</h1>
+        <p style="color:#6B6559;margin-top:4px;">${company.name} · Wellington, NZ</p>
+      </div>
+      <button class="btn btn-amber btn-lg" onclick="startNewQuote()">${t('new_quote')}</button>
+    </div>
+    <div class="g3" style="margin-bottom:24px;">
+      <div class="card"><div class="card-body">
+        <div class="lbl" style="margin-bottom:8px;">${t('total_quotes')}</div>
+        <div class="ff-display" style="font-size:40px;font-weight:700;color:#1A3C34;">${quotes.length}</div>
+        <div style="font-size:13px;color:#8A8179;margin-top:4px;">${t('saved_in_system')}</div>
+      </div></div>
+      <div class="card"><div class="card-body">
+        <div class="lbl" style="margin-bottom:8px;">${t('estimated_value')}</div>
+        <div class="ff-display" style="font-size:32px;font-weight:700;color:#D4871B;">${fmt(totalRev)}</div>
+        <div style="font-size:13px;color:#8A8179;margin-top:4px;">${t('includes_gst')}</div>
+      </div></div>
+      <div class="card"><div class="card-body">
+        <div class="lbl" style="margin-bottom:8px;">${t('configured_company')}</div>
+        <div class="ff-display" style="font-size:18px;font-weight:600;color:#1A3C34;margin-top:4px;">${company.name}</div>
+        <button onclick="showView('config')" style="font-size:13px;color:#D4871B;font-weight:600;border:none;background:none;cursor:pointer;font-family:inherit;margin-top:6px;padding:0;">${t('edit_config')}</button>
+        <button onclick="openClientProfileFromDashboard()" style="font-size:13px;color:#D4871B;font-weight:600;border:none;background:none;cursor:pointer;font-family:inherit;margin-top:2px;padding:0;">${t('search_client_profile')}</button>
+      </div></div>
+    </div>
+    <div class="card" style="margin-bottom:24px;">
+      <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;">
+        <h2 class="ff-display" style="font-size:20px;font-weight:600;color:#1A3C34;">${t('recent_quotes')}</h2>
+        <button class="btn btn-ghost btn-sm" onclick="showView('guardadas')">${t('view_all')}</button>
+      </div>
+      ${recent.length === 0 ? `
+        <div class="card-body" style="text-align:center;padding:60px 24px;">
+          <div style="font-size:56px;margin-bottom:12px;">🎨</div>
+          <p style="font-weight:600;color:#6B6559;font-size:16px;">${t('no_quotes_yet')}</p>
+          <button class="btn btn-amber" style="margin-top:20px;" onclick="startNewQuote()">${t('create_quote')}</button>
+        </div>
+      ` : `
+        <div style="overflow-x:auto;">
+          <table class="tbl">
+            <thead><tr><th>${t('quote_num')} / ${t('client')}</th><th>${t('address')}</th><th>${t('type')}</th><th>${t('area')}</th><th>${t('total_rec')}</th><th>${t('date')}</th><th>${t('actions')}</th></tr></thead>
+            <tbody>
+              ${recent.map(q => `
+              <tr>
+                <td><div style="font-weight:700;color:#D4871B;font-size:12px;font-family:monospace;">${qNum(q.id)}</div><div style="font-weight:600;">${q.client?.name||'—'}</div></td>
+                <td style="color:#6B6559;font-size:13px;max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${q.client?.address||'—'}</td>
+                <td><span class="bdg bdg-forest">${JOB_TYPES[q.jobType]?.icon||''} ${JOB_TYPES[q.jobType]?.label||q.jobType}</span></td>
+                <td>${q.result ? q.result.totalM2.toFixed(0)+' m²' : '—'}</td>
+                <td style="font-weight:700;color:#1A3C34;">${q.result ? fmt(q.result.scenarios.recommended.total) : '—'}</td>
+                <td style="color:#8A8179;font-size:13px;white-space:nowrap;">${q.createdAt ? new Date(q.createdAt).toLocaleDateString('es-NZ') : '—'}</td>
+                <td>
+                  <div style="display:flex;gap:6px;">
+                    <button class="btn btn-outline btn-sm" onclick="loadQuote('${q.id}')">${t('open')}</button>
+                    <button class="btn btn-amber btn-sm" onclick="loadAndPDF('${q.id}')">${t('pdf')}</button>
+                    <button class="btn btn-primary btn-sm" onclick="openClientProfile('${q.id}')">${t('profile')}</button>
+                    <button class="btn btn-danger btn-sm" onclick="delQuoteConfirm('${q.id}')">${t('delete')}</button>
+                  </div>
+                </td>
+              </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+      `}
+    </div>
+    ${(() => {
+      const profiles = JSON.parse(localStorage.getItem('ppc_profiles') || '[]');
+      const today = new Date(); today.setHours(0,0,0,0);
+      let alerts = [];
+      profiles.forEach(p => {
+        const invoices = (p.payments||[]).filter(pay => pay.type === 'factura');
+        if (invoices.length === 0) return;
+        const lastInvoice = invoices.sort((a,b) => (b.date||'').localeCompare(a.date||''))[0];
+        if (!lastInvoice || !lastInvoice.date) return;
+        const dueDays = p.paymentConfig?.dueDays || 30;
+        const invoiceDate = new Date(lastInvoice.date + 'T00:00:00');
+        const dueDate = new Date(invoiceDate);
+        dueDate.setDate(dueDate.getDate() + dueDays);
+        const diffDays = Math.ceil((dueDate - today) / (1000*60*60*24));
+        const percentLeft = (diffDays / dueDays) * 100;
+        const quotes = DB.getQuotes().filter(q => (q.client?.name||'').toLowerCase().trim() === (p.clientName||'').toLowerCase().trim());
+        const totalBilled = quotes.reduce((s,q)=>s+(q.result?.scenarios?.recommended?.total||0),0);
+        const totalPaid = (p.payments||[]).filter(x=>x.status==='Pagado'||x.status==='Parcial').reduce((s,x)=>s+(+x.amount||0),0);
+        const pending = totalBilled - totalPaid;
+        if (pending <= 0) return;
+        if (diffDays < 0) {
+          alerts.push({ name: p.clientName, status:'vencido', days:Math.abs(diffDays), pending, invoiceDate, dueDate });
+        } else if (percentLeft <= 10 && diffDays > 0) {
+          alerts.push({ name: p.clientName, status:'proximo', days:diffDays, pending, invoiceDate, dueDate });
+        }
+      });
+      if (alerts.length === 0) return '';
+      return `
+      <div class="card" style="margin-bottom:24px; border-left: 4px solid #DC2626;">
+        <div class="card-header" style="background:#FEF2F2;">
+          <h2 class="ff-display" style="font-size:18px;font-weight:600;color:#DC2626;">⚠️ ${t('pending_invoices') || 'Facturas por Cobrar'}</h2>
+          <p style="font-size:12px;color:#7F1D1D;margin-top:4px;">${alerts.filter(a=>a.status==='vencido').length} ${t('overdue') || 'vencidas'} · ${alerts.filter(a=>a.status==='proximo').length} ${t('upcoming') || 'próximas a vencer'}</p>
+        </div>
+        <div class="card-body" style="padding:16px;">
+          ${alerts.map(a => `
+          <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #FEE2E2;">
+            <span style="font-size:20px;">${a.status==='vencido'?'🔴':'🟡'}</span>
+            <div style="flex:1;">
+              <div style="font-weight:600;color:#1C1C1C;">${a.name}</div>
+              <div style="font-size:12px;color:#6B6559;">
+                ${a.status==='vencido' 
+                  ? `${t('overdue_by') || 'Vencida hace'} ${a.days} ${t('days') || 'días'} · ${t('pending_amount') || 'Pendiente'}: <strong>${fmt(a.pending)}</strong>`
+                  : `${t('due_in') || 'Vence en'} ${a.days} ${t('days') || 'días'} · ${t('pending_amount') || 'Pendiente'}: <strong>${fmt(a.pending)}</strong>`
+                }
+              </div>
+            </div>
+            <button class="btn btn-outline btn-sm" onclick="searchAndOpenProfile('${a.name.replace(/'/g,"\\'")}')">${t('view_profile') || 'Ver perfil'} →</button>
+          </div>
+          `).join('')}
+        </div>
+      </div>`;
+    })()}    
+    <div class="g2">
+      <div class="card" style="background:linear-gradient(135deg,#1A3C34,#2A5C50);cursor:pointer;" onclick="startNewQuote('m2')">
+        <div class="card-body"><div style="font-size:28px;margin-bottom:10px;">📐</div><div class="ff-display" style="font-size:20px;font-weight:600;color:#fff;margin-bottom:6px;">${t('quote_by_m2')}</div><p style="font-size:13px;color:#80B5A8;">${t('quick_calc_m2')}</p><div style="margin-top:14px;display:inline-block;padding:8px 16px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:8px;color:#fff;font-size:13px;font-weight:600;">${t('use_m2_mode')}</div></div>
+      </div>
+      <div class="card" style="background:linear-gradient(135deg,#B87018,#D4871B);cursor:pointer;" onclick="startNewQuote('realcost')">
+        <div class="card-body"><div style="font-size:28px;margin-bottom:10px;">🧮</div><div class="ff-display" style="font-size:20px;font-weight:600;color:#fff;margin-bottom:6px;">${t('quote_by_realcost')}</div><p style="font-size:13px;color:#FFE8C0;">${t('exact_cost')}</p><div style="margin-top:14px;display:inline-block;padding:8px 16px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:8px;color:#fff;font-size:13px;font-weight:600;">${t('use_realcost_mode')}</div></div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ---- Nueva cotización (wizard) ----
+function startNewQuote(mode) {
+  QD = freshQuote();
+  QR = null;
+  QS = 0;
+  if (mode) { QD.mode = mode; QS = 1; }
+  showView('nueva');
+}
+function renderNueva() {
+  const steps = [t('step_mode'), t('step_client'), t('step_job'), t('step_labour'), t('step_result')];
+  const pct   = QS === 0 ? 0 : Math.round((QS / (steps.length - 1)) * 100);
+  document.getElementById('view-nueva').innerHTML = `
+  <div class="fadein">
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:24px;flex-wrap:wrap;">
+      <button class="btn btn-ghost btn-sm" onclick="showView('dashboard')">← ${t('back')}</button>
+      <div>
+        <h1 class="ff-display" style="font-size:26px;font-weight:700;color:#1A3C34;">${t('new_quote')}</h1>
+        <p style="font-size:13px;color:#8A8179;">${t('step')} ${QS + 1} ${t('of')} ${steps.length}</p>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:20px;">
+      <div class="card-body" style="padding:16px 20px;">
+        <div style="display:flex;align-items:center;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:12px;">
+          ${steps.map((s,i) => `
+            <div style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
+              <div class="sdot ${i < QS ? 'done' : i === QS ? 'active' : ''}">${i < QS ? '✓' : i+1}</div>
+              <span style="font-size:12px;font-weight:600;color:${i===QS?'#D4871B':i<QS?'#1A3C34':'#B0A89A'};">${s}</span>
+              ${i < steps.length-1 ? '<div style="width:20px;height:2px;background:#E3DDD5;margin-left:4px;flex-shrink:0;"></div>' : ''}
+            </div>
+          `).join('')}
+        </div>
+        <div class="pbar"><div class="pfill" style="width:${pct}%"></div></div>
+      </div>
+    </div>
+    <div id="step-content"></div>
+  </div>`;
+  renderStep();
+}
+function renderStep() {
+  const el = document.getElementById('step-content');
+  if (!el) return;
+  const fns = [rS0, rS1, rS2, rS4, rS5];
+  el.innerHTML = (fns[QS] || (() => ''))();
+  el.className = 'fadein';
+}
+
+// Pasos (Step 0-5)
+function rS0() {
+  return `<div class="card">
+    <div class="card-header"><h2 class="ff-display" style="font-size:20px;font-weight:600;color:#1A3C34;">${t('how_quote')}</h2></div>
+    <div class="card-body">
+      <div class="g2" style="gap:16px;margin-bottom:24px;">
+        <div class="mode-card ${QD.mode==='m2'?'sel':''}" onclick="QD.mode='m2'; renderStep()">
+          <div style="font-size:36px;margin-bottom:12px;">📐</div>
+          <div class="ff-display" style="font-size:19px;font-weight:600;color:#1A3C34;">${t('per_m2_title')}</div>
+          <p style="font-size:13px;color:#6B6559;">${t('per_m2_desc')}</p>
+        </div>
+        <div class="mode-card ${QD.mode==='realcost'?'sel':''}" onclick="QD.mode='realcost'; renderStep()">
+          <div style="font-size:36px;margin-bottom:12px;">🧮</div>
+          <div class="ff-display" style="font-size:19px;font-weight:600;color:#1A3C34;">${t('realcost_title')}</div>
+          <p style="font-size:13px;color:#6B6559;">${t('realcost_desc')}</p>
+        </div>
+      </div>
+      ${QD.mode === 'm2' ? `
+      <div style="background:#FDF5E8;border:1px solid #FAE8C7;border-radius:12px;padding:18px;margin-bottom:24px;">
+        <label class="lbl">${t('base_rate_per_m2')}</label>
+        <input type="number" id="m2r" class="inp" value="${QD.m2Rate}" min="1" step="1" style="max-width:160px;" oninput="QD.m2Rate=parseFloat(this.value)||25">
+      </div>` : ''}
+      <div style="display:flex;justify-content:flex-end;"><button class="btn btn-primary btn-lg" onclick="goStep(1)">${t('next')}</button></div>
+    </div></div>`;
+}
+function rS1() {
+  const c = QD.client;
+  return `<div class="card"><div class="card-header"><h2 class="ff-display" style="font-size:20px;font-weight:600;color:#1A3C34;">${t('client_data')}</h2></div>
+    <div class="card-body">
+      <div class="g2" style="gap:18px;">
+        <div><label class="lbl">${t('name')}</label><input id="cn" class="inp" value="${c.name}" placeholder="John Smith"></div>
+        <div><label class="lbl">${t('phone')}</label><input id="cp" class="inp" value="${c.phone}" placeholder="021 123 4567"></div>
+        <div><label class="lbl">${t('email')}</label><input id="ce" class="inp" value="${c.email}" placeholder="john@email.com"></div>
+        <div><label class="lbl">${t('address_label')}</label><input id="ca" class="inp" value="${c.address}" placeholder="15 Cuba St, Wellington"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:28px;">
+        <button class="btn btn-outline" onclick="goStep(0)">← ${t('back')}</button>
+        <button class="btn btn-primary btn-lg" onclick="saveS1(); goStep(2)">${t('next')}</button>
+      </div>
+    </div></div>`;
+}
+function rS2() {
+  const prods = DB.getProducts();
+  const total = QD.areas.reduce((s, a) => s + (a.measureMode === 'm2' ? (parseFloat(a.m2) || 0) : 0), 0);
+
+  if (!QD.areaProducts) QD.areaProducts = {};
+  QD.areas.forEach((a, i) => { if (!a.id) a.id = 'a' + i; });
+
+  const productSelect = (areaIndex, currentProductId) => {
+    const options = prods.map(p => {
+      const selected = currentProductId === p.id ? 'selected' : '';
+      return `<option value="${p.id}" ${selected}>${p.brand} - ${p.name} (${PROD_TYPES[p.type]||p.type})</option>`;
+    }).join('');
+    return `<select class="inp" style="max-width:260px;" onchange="QD.areaProducts['${QD.areas[areaIndex].id}'] = this.value;">
+      <option value="">-- Sin pintura --</option>
+      ${options}
+    </select>`;
+  };
+
+  const copyPrevButton = (i) => {
+    if (i === 0) return '';
+    const prevType = QD.areas[i - 1].surfaceType;
+    if (prevType === 'Puerta' || prevType === 'Ventana') {
+      const prevProdId = QD.areaProducts[QD.areas[i - 1].id];
+      if (prevProdId) {
+        return `<button class="btn btn-ghost btn-sm" onclick="QD.areaProducts['${QD.areas[i].id}']='${prevProdId}'; renderStep();" title="Usar misma pintura que la anterior">🔄 Igual que anterior</button>`;
+      }
+    }
+    return '';
+  };
+
+  return `
+    <div class="card"><div class="card-header"><h2 class="ff-display" style="font-size:20px;font-weight:600;color:#1A3C34;">${t('job_type')}, ${t('surfaces')} y ${t('extra_materials')}</h2></div>
+      <div class="card-body">
+        <div style="margin-bottom:22px;">
+          <label class="lbl">${t('job_type')}</label>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;">
+            ${Object.entries(JOB_TYPES).map(([k,v]) => `<button onclick="QD.jobType='${k}'; renderStep()" class="btn btn-sm ${QD.jobType===k?'btn-primary':'btn-outline'}">${v.icon} ${v.label}</button>`).join('')}
+          </div>
+        </div>
+
+        <div style="margin-bottom:22px;">
+          <label class="lbl">${t('coats')}</label>
+          <div style="display:flex;gap:8px;">${[1,2,3].map(n => `<button onclick="QD.coats=${n}; renderStep()" class="btn btn-sm ${QD.coats===n?'btn-primary':'btn-outline'}">${n}</button>`).join('')}</div>
+        </div>
+
+        <div style="margin-bottom:22px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+            <label class="lbl" style="margin:0;">${t('surfaces')}</label>
+            <button class="btn btn-ghost btn-sm" onclick="addArea()">+ ${t('add_surface')}</button>
+          </div>
+          <div id="areas-list">${QD.areas.map((a,i) => `
+            <div class="arow" style="flex-wrap:wrap;align-items:center;">
+              <select class="inp" style="max-width:110px;" onchange="QD.areas[${i}].surfaceType=this.value; renderStep()">${SURFACE_TYPES.map(st => `<option ${a.surfaceType===st?'selected':''}>${st}</option>`).join('')}</select>
+              <input type="text" class="inp" style="max-width:140px;" value="${a.label}" oninput="QD.areas[${i}].label=this.value" placeholder="${t('surface_name')}">
+              <select class="inp" style="max-width:100px;" onchange="QD.areas[${i}].measureMode=this.value; renderStep()">
+                <option ${a.measureMode==='m2'?'selected':''}>m²</option>
+                <option ${a.measureMode==='fixed'?'selected':''}>Unidad fija</option>
+              </select>
+              ${a.measureMode==='m2' 
+                ? `<input type="number" class="inp" style="max-width:90px;" value="${a.m2}" oninput="QD.areas[${i}].m2=parseFloat(this.value)||0; updTot()" placeholder="m²" step="0.5"><span>m²</span>`
+                : `<input type="number" class="inp" style="max-width:70px;" value="${a.qty||1}" oninput="QD.areas[${i}].qty=parseInt(this.value)||1" placeholder="Cant."><span>× $</span><input type="number" class="inp" style="max-width:90px;" value="${a.price||0}" oninput="QD.areas[${i}].price=parseFloat(this.value)||0" placeholder="${t('unit_price')}">`}
+              ${['Puerta','Ventana','Otro'].includes(a.surfaceType) ? `
+                <input type="number" class="inp" style="max-width:70px;" value="${a.manualLitres||''}" oninput="QD.areas[${i}].manualLitres=parseFloat(this.value)||0" placeholder="${t('litres')}" step="0.1" title="Litros manuales"><span style="font-size:11px;color:#6B6559;">L</span>
+              ` : ''}
+              <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:4px;width:100%;">
+                <span style="font-size:12px;color:#6B6559;">🎨</span>
+                ${productSelect(i, QD.areaProducts[a.id] || '')}
+                ${copyPrevButton(i)}
+                <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:#6B6559;cursor:pointer;margin-left:4px;">
+                  <input type="checkbox" style="width:16px;height:16px;accent-color:#D4871B;" 
+                         ${a.spray ? 'checked' : ''} 
+                         onchange="QD.areas[${i}].spray = this.checked; renderStep();">
+                  ${t('sprayer_label')}
+                </label>
+              </div>
+              ${QD.areas.length > 1 ? `<button class="btn btn-danger btn-sm" onclick="remArea(${i})" style="margin-left:auto;">✕</button>` : ''}
+            </div>`).join('')}</div>
+          <div style="background:#F0F5F3;border-radius:10px;padding:12px 16px;margin-top:8px;"><span style="font-weight:700;color:#1A3C34;" id="tot-m2">Total área m²: ${total.toFixed(1)} m²</span></div>
+        </div>
+
+        <textarea id="qnotes" class="inp" rows="3" placeholder="${t('notes')}">${QD.notes}</textarea>
+
+        <div style="margin-top:20px;">
+          <div class="card" style="margin-bottom:16px;"><div class="card-header"><div style="display:flex;align-items:center;justify-content:space-between;"><h2 class="ff-display">${t('primer_sealer')}</h2><div><input type="checkbox" class="tog" id="togP" ${QD.usePrimer?'checked':''} onchange="QD.usePrimer=this.checked; renderStep()"><label for="togP"></label></div></div></div>
+            ${QD.usePrimer ? `<div class="card-body"><div class="g2">${prods.filter(p=>p.type==='primer').map(p => prodCard(p, QD.products['primer']||'', 'primer')).join('')}</div></div>` : ''}
+        </div>
+
+        <div class="card" style="margin-bottom:16px;"><div class="card-header"><div style="display:flex;align-items:center;justify-content:space-between;"><h2 class="ff-display">${t('filler_putty')}</h2><div><input type="checkbox" class="tog" id="togF" ${QD.useFiller?'checked':''} onchange="QD.useFiller=this.checked; renderStep()"><label for="togF"></label></div></div></div>
+          ${QD.useFiller ? `<div class="card-body"><div class="g2">${prods.filter(p=>p.type==='filler').map(p => prodCard(p, QD.products['filler']||'', 'filler')).join('')}</div></div>` : ''}
+
+        <div class="card" style="margin-bottom:16px;"><div class="card-header"><h2 class="ff-display">${t('extra_materials')}</h2></div><div class="card-body">
+          <div id="extra-mats-list">${(QD.extraMaterials||[]).map((m,i) => `<div class="arow">
+            <input type="text" class="inp" style="max-width:200px;" value="${m.desc}" oninput="QD.extraMaterials[${i}].desc=this.value" placeholder="${t('description')}">
+            <input type="number" class="inp" style="max-width:80px;" value="${m.qty}" oninput="QD.extraMaterials[${i}].qty=parseFloat(this.value)||0" placeholder="${t('qty')}">
+            × $ <input type="number" class="inp" style="max-width:100px;" value="${m.unitCost}" oninput="QD.extraMaterials[${i}].unitCost=parseFloat(this.value)||0" placeholder="${t('unit_price')}">
+            <button class="btn btn-danger btn-sm" onclick="removeExtraMat(${i})">✕</button></div>`).join('')}</div>
+          <button class="btn btn-ghost btn-sm" onclick="addExtraMaterial()">+ ${t('add_material')}</button>
+          <button class="btn btn-ghost btn-sm" style="margin-left:8px;" onclick="addProdFromDB()">+ ${t('from_database')}</button>
+        </div></div>
+
+        <div style="display:flex;justify-content:space-between;margin-top:28px;">
+          <button class="btn btn-outline" onclick="goStep(1)">← ${t('back')}</button>
+          <button class="btn btn-primary btn-lg" onclick="saveS2(); goStep(3)">${t('next')}</button>
+        </div>
+      </div></div>`;
+}
+function rS4() {
+  const lbr = DB.getLabor();
+  const rate = lbr.ratePerWorker || 40;
+  const workers = parseInt(QD.workers)||2;
+  const hours = parseFloat(QD.hours)||0;
+  return `<div class="card"><div class="card-header"><h2 class="ff-display" style="font-size:20px;font-weight:600;color:#1A3C34;">${t('labour_title')}</h2></div>
+    <div class="card-body">
+      <div style="margin-bottom:24px;"><label class="lbl">${t('workers_qty')}</label>
+        <input type="number" id="workers" class="inp" style="max-width:120px;" value="${workers}" min="1" oninput="QD.workers=parseInt(this.value)||1; updLbr()">
+        <div style="font-size:12px;color:#8A8179;">${t('rate_per_worker')}: ${fmt(rate)} (${t('configurable_in')} <button onclick="showView('config')" style="color:#D4871B;font-weight:600;border:none;background:none;cursor:pointer;font-size:12px;">${t('edit_config')}</button>)</div>
+      </div>
+      <div style="margin-bottom:24px;"><label class="lbl">${t('est_hours')}</label>
+        <input type="number" id="hrs" class="inp" style="max-width:150px;" value="${hours}" min="0.5" step="0.5" oninput="QD.hours=parseFloat(this.value)||0; updLbr()">
+        <div id="lbr-prev" style="font-size:15px;font-weight:700;color:#1A3C34;margin-top:8px;">${fmt(hours*rate*workers)} ${t('in_labour')}</div>
+      </div>
+      <div style="margin-bottom:24px;"><label class="lbl">${t('scaffolding_rent')}</label><input type="number" id="scaff" class="inp" style="max-width:200px;" value="${QD.scaffolding}" min="0" step="50" oninput="QD.scaffolding=parseFloat(this.value)||0"></div>
+      <div style="margin-bottom:24px;">
+        <div style="display:flex;align-items:center;gap:10px;"><label class="lbl" style="margin:0;">${t('include_sprayer')}</label><input type="checkbox" class="tog" id="togSpray" ${QD.sprayer?.include?'checked':''} onchange="QD.sprayer.include=this.checked; renderStep()"><label for="togSpray"></label></div>
+        ${QD.sprayer?.include ? `<label class="lbl">${t('sprayer_cost')}</label><input type="number" class="inp" style="max-width:200px;" value="${QD.sprayer?.cost||0}" min="0" step="10" oninput="QD.sprayer.cost = parseFloat(this.value)||0">` : ''}
+      </div>
+      ${QD.mode==='realcost' ? `<div style="background:#FDF5E8;border:1px solid #FAE8C7;border-radius:14px;padding:20px;margin-bottom:24px;"><div style="font-size:15px;font-weight:700;">${t('margins_title')}</div><div class="g3" style="gap:14px;"><div><label class="lbl">${t('base_margin')}</label><input type="number" class="inp" value="${QD.margins.base}" oninput="QD.margins.base=parseFloat(this.value)||0"></div><div><label class="lbl">${t('recommended_margin')}</label><input type="number" class="inp" value="${QD.margins.recommended}" oninput="QD.margins.recommended=parseFloat(this.value)||0"></div><div><label class="lbl">${t('premium_margin')}</label><input type="number" class="inp" value="${QD.margins.premium}" oninput="QD.margins.premium=parseFloat(this.value)||0"></div></div></div>` : ''}
+      <div style="display:flex;justify-content:space-between;"><button class="btn btn-outline" onclick="goStep(2)">← ${t('back')}</button><button class="btn btn-amber btn-lg" onclick="computeResult()">${t('calculate')}</button></div>
+    </div></div>`;
+}
+function rS5() {
+  if (!QR) QR = calculate(QD);
+  const r = QR;
+  const { base: B, recommended: RC, premium: PR } = r.scenarios;
+  const scenCard = (s, highlight) => `<div class="card ${highlight ? 'ring-amber' : ''}">
+    <div style="padding:16px;text-align:center;background:${highlight?'#FDF5E8':'#FAFAF8'};border-radius:14px 14px 0 0;">
+      ${highlight ? `<span class="bdg bdg-amber">${t('recommended_badge')}</span>` : '<div style="height:26px;"></div>'}
+      <div class="ff-display" style="font-size:34px;font-weight:700;color:${highlight?'#D4871B':'#1A3C34'};">${fmt(s.total)}</div>
+      <div style="font-size:12px;color:#8A8179;">${t('includes_gst')}</div></div>
+    <div style="padding:16px;">
+      <div style="font-size:15px;font-weight:700;text-align:center;margin-bottom:14px;">${s.label}</div>
+      <div style="display:flex;flex-direction:column;gap:7px;font-size:13.5px;">
+        <div style="display:flex;justify-content:space-between;"><span>${t('materials')}</span><span>${fmt(s.materials)}</span></div>
+        <div style="display:flex;justify-content:space-between;"><span>${t('labour_cost')}</span><span>${fmt(s.labour)}</span></div>
+        ${QD.mode==='realcost'?`<div style="display:flex;justify-content:space-between;"><span>${t('margin')} ${s.margin}%</span><span>${fmt(s.subtotal-s.materials-s.labour)}</span></div>`:''}
+        <div style="height:1px;background:#F0EDE7;"></div>
+        <div style="display:flex;justify-content:space-between;"><span>Subtotal</span><span>${fmt(s.subtotal)}</span></div>
+        <div style="display:flex;justify-content:space-between;"><span>${t('includes_gst')}</span><span>${fmt(s.gst)}</span></div>
+        <div style="display:flex;justify-content:space-between;font-weight:700;font-size:15px;border-top:2px solid #F0EDE7;padding-top:4px;"><span>${t('total')}</span><span>${fmt(s.total)}</span></div></div></div></div>`;
+  return `<div class="fadein">
+    <div class="card" style="background:linear-gradient(135deg,#1A3C34,#265248);margin-bottom:20px;"><div class="card-body">
+      <div style="display:flex;flex-wrap:wrap;gap:20px;justify-content:space-between;align-items:center;">
+        <div><div style="font-size:12px;text-transform:uppercase;color:#80B5A8;">${t('quote_for')}</div><div class="ff-display" style="font-size:26px;font-weight:700;color:#fff;">${QD.client.name||'Cliente'}</div><div style="color:#80B5A8;">${QD.client.address}</div></div>
+        <div style="text-align:right;"><div style="color:#80B5A8;">${t('recommended_price')}</div><div class="ff-display" style="font-size:40px;font-weight:700;color:#D4871B;">${fmt(RC.total)}</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,.15);">
+        <div><div style="color:#80B5A8;">${t('total_area')}</div><div style="color:#fff;">${r.totalM2.toFixed(1)} m²</div></div>
+        <div><div style="color:#80B5A8;">${t('materials')}</div><div style="color:#fff;">${fmt(r.totalMat)}</div></div>
+        <div><div style="color:#80B5A8;">${t('labour_cost')}</div><div style="color:#fff;">${fmt(r.lbrCost)}</div></div>
+        <div><div style="color:#80B5A8;">${t('mode')}</div><div style="color:#fff;">${QD.mode==='m2'?t('per_m2_mode'):t('realcost_mode')}</div></div>
+      </div>
+    </div></div>
+        ${(() => {
+      const scope = DB.getScope();
+      const cards = [
+        { s: B,  highlight: false, desc: scope.basic        || '' },
+        { s: RC, highlight: true,  desc: scope.recommended  || '' },
+        { s: PR, highlight: false, desc: scope.premium      || '' }
+      ];
+      return `<div class="g3" style="margin-bottom:20px;">` +
+        cards.map(c => `
+          <div>
+            ${scenCard(c.s, c.highlight)}
+            ${c.desc ? `<div style="font-size:12px;color:#6B6559;margin-top:8px;white-space:pre-line;padding:0 16px 16px;">${c.desc}</div>` : ''}
+          </div>
+        `).join('') +
+        `</div>`;
+    })()}
+    <div class="card" style="margin-bottom:20px;"><div class="card-header"><h2 class="ff-display">${t('breakdown')}</h2></div>
+      <div style="overflow-x:auto;"><table class="tbl"><thead><tr><th>${t('cat')}</th><th>${t('description')}</th><th>${t('qty')}</th><th>${t('unit_price')}</th><th>${t('total')}</th></tr></thead>
+        <tbody>${r.items.map(it => `<tr><td><span class="bdg bdg-gray">${it.cat}</span></td><td>${it.desc}${it.litres?`<br><small>${it.litres}L ${t('needed')}</small>`:''}${it.areaM2?`<br><small>${t('surface')}: ${it.areaM2} m²</small>`:''}</td><td>${it.qty} ${it.unit}</td><td>${fmt(it.unitCost)}</td><td style="font-weight:700;">${fmt(it.total)}</td></tr>`).join('')}
+        <tr style="background:#F8F6F1;"><td colspan="4" style="text-align:right;font-weight:700;">${t('total_materials')}</td><td style="font-weight:700;">${fmt(r.totalMat)}</td></tr>
+        <tr style="background:#F8F6F1;"><td colspan="4" style="text-align:right;">${t('labour_cost')}</td><td style="font-weight:700;">${fmt(r.lbrCost)}</td></tr>
+      </tbody></table></div></div>
+    <div class="card"><div class="card-body" style="display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;">
+      <div><button class="btn btn-outline" onclick="goStep(3)">← ${t('edit')}</button><button class="btn btn-primary" onclick="saveCurrentQuote()">${t('save_quote')}</button></div>
+      <button class="btn btn-amber btn-lg" onclick="generatePDF()">${t('generate_pdf')}</button>
+    </div></div>
+  </div>`;
+}
+
+// Helpers
+function prodCard(p, selId, key) {
+  // Mostrar información genérica: rango de tamaños y precio por litro
+  const sizesStr = p.sizes ? p.sizes.map(sz => sz.size+'L').join(', ') : '';
+  const pricePerLitre = p.sizes ? (p.sizes[0].price / p.sizes[0].size).toFixed(2) : '?';
+  return `<div class="pcard ${selId===p.id?'sel':''}" onclick="QD.products['${key}']='${p.id}'; renderStep()">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+      <div>
+        <div style="font-weight:600;font-size:13.5px;">${p.name}</div>
+        <div style="font-size:12px;color:#8A8179;">
+          <span class="bdg ${p.brand==='Resene'?'bdg-forest':'bdg-amber'}">${p.brand}</span>
+          &nbsp;${PROD_TYPES[p.type]||p.type}
+        </div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-weight:700;color:#1A3C34;">${fmt(pricePerLitre)}/L</div>
+        <div style="font-size:11px;color:#8A8179;">Envases: ${sizesStr}</div>
+      </div>
+    </div>
+    <div style="font-size:11.5px;color:#8A8179;margin-top:6px;">Rendimiento: ${p.coverage} m²/L</div>
+  </div>`;
+}
+function addArea(){ QD.areas.push({ label:'Superficie', m2:'', surfaceType:'Pared', measureMode:'m2', qty:1, price:0, spray:false }); renderStep(); }
+function remArea(i){ QD.areas.splice(i,1); renderStep(); }
+function updTot(){
+  const total = QD.areas.reduce((s,a)=>s+(a.measureMode==='m2'?(parseFloat(a.m2)||0):0),0);
+  const el = document.getElementById('tot-m2'); if(el) el.textContent = `Total área m²: ${total.toFixed(1)} m²`;
+}
+function addExtraMaterial(){ if(!QD.extraMaterials) QD.extraMaterials=[]; QD.extraMaterials.push({ desc:'', qty:1, unitCost:0 }); renderStep(); }
+function removeExtraMat(i){ QD.extraMaterials.splice(i,1); renderStep(); }
+function addProdFromDB(){
+  const prods = DB.getProducts();
+  const html = prods.map(p => `<option value="${p.id}">${p.name} (${p.brand})</option>`).join('');
+  document.getElementById('modal-box').innerHTML = `<div class="card-header"><h2 class="ff-display">Seleccionar producto</h2><button class="btn btn-ghost btn-sm" onclick="closeModal()">✕</button></div>
+    <div class="card-body"><select id="pm-select" class="inp">${html}</select>
+    <div style="margin-top:14px;"><label class="lbl">Cantidad</label><input id="pm-qty" class="inp" type="number" value="1" min="1"><label class="lbl" style="margin-top:10px;">Precio unitario (NZD)</label><input id="pm-cost" class="inp" type="number" value="" placeholder="Auto"></div>
+    <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end;"><button class="btn btn-outline" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="addProdFromDBConfirm()">Agregar</button></div></div>`;
+  document.getElementById('modal-bg').style.display='block'; document.getElementById('modal-wrap').style.display='flex';
+}
+function addProdFromDBConfirm(){
+  const pid = document.getElementById('pm-select').value;
+  const qty = parseFloat(document.getElementById('pm-qty').value)||1;
+  const costInput = document.getElementById('pm-cost').value;
+  const prod = DB.getProducts().find(p=>p.id===pid);
+  if(!prod) return;
+  // Si el usuario no puso precio manual, usar el precio del primer envase
+  const unitCost = costInput ? parseFloat(costInput) : (prod.sizes && prod.sizes.length > 0 ? prod.sizes[0].price : 0);
+  if(!QD.extraMaterials) QD.extraMaterials=[];
+  QD.extraMaterials.push({ desc:`${prod.name} (${prod.brand})`, qty, unitCost });
+  closeModal(); renderStep();
+}
+function goStep(n) { if(QS===0){ const el=document.getElementById('m2r'); if(el) QD.m2Rate=parseFloat(el.value)||25; } QS=n; renderNueva(); }
+function saveS1(){ QD.client.name=document.getElementById('cn')?.value||''; QD.client.phone=document.getElementById('cp')?.value||''; QD.client.email=document.getElementById('ce')?.value||''; QD.client.address=document.getElementById('ca')?.value||''; }
+function saveS2(){ QD.notes=document.getElementById('qnotes')?.value||''; }
+function updLbr(){
+  const lbr=DB.getLabor(); const rate=lbr.ratePerWorker||40;
+  const w=parseInt(document.getElementById('workers')?.value)||2;
+  const h=parseFloat(document.getElementById('hrs')?.value)||0;
+  const el=document.getElementById('lbr-prev'); if(el) el.textContent=fmt(h*rate*w)+' en mano de obra';
+}
+function computeResult(){
+  const hEl=document.getElementById('hrs'), sEl=document.getElementById('scaff'), wEl=document.getElementById('workers');
+  if(hEl) QD.hours=parseFloat(hEl.value)||0;
+  if(sEl) QD.scaffolding=parseFloat(sEl.value)||0;
+  if(wEl) QD.workers=parseInt(wEl.value)||2;
+  QR=calculate(QD); QS=4; renderNueva();
+}
+function saveCurrentQuote(){ if(!QD||!QR) return; if(!QD.id){ QD.id=gid(); QD.createdAt=new Date().toISOString(); } DB.saveQuote({...QD, result:QR}); notify('✓ Cotización guardada'); }
+function loadQuote(id){ const q=DB.getQuoteById(id); if(!q) return; QD={...q}; QR=q.result||null; QS=4; showView('nueva'); }
+function loadAndPDF(id){ const q=DB.getQuoteById(id); if(!q) return; QD={...q}; QR=q.result||null; if(QR) generatePDF(); }
+function delQuoteConfirm(id){ if(!confirm('¿Eliminar esta cotización?')) return; DB.deleteQuote(id); notify('Cotización eliminada','err'); renderDashboard(); if(CV==='guardadas') renderGuardadas(); }
+
+function renderGuardadas() {
+  const quotes = DB.getQuotes();
+  document.getElementById('view-guardadas').innerHTML = `
+  <div class="fadein">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+      <h1 class="ff-display" style="font-size:30px;font-weight:700;color:#1A3C34;">Cotizaciones Guardadas</h1>
+      <button class="btn btn-amber" onclick="startNewQuote()">+ Nueva</button>
+    </div>
+    ${quotes.length===0 ? `<div class="card"><div class="card-body" style="text-align:center;padding:70px 24px;">No hay cotizaciones guardadas.</div></div>` : `
+    <div class="card"><div style="overflow-x:auto;"><table class="tbl">
+      <thead><tr>
+        <th>N°</th><th>Cliente</th><th>Dirección</th><th>Tipo</th>
+        <th>Área</th><th>Total</th><th>Fecha</th><th>Acciones</th>
+      </tr></thead>
+      <tbody>
+        ${quotes.map(q => `
+        <tr>
+          <td style="font-weight:700;color:#D4871B;font-family:monospace;">${qNum(q.id)}</td>
+          <td>${q.client?.name||'—'}</td>
+          <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${q.client?.address||'—'}</td>
+          <td><span class="bdg bdg-forest">${JOB_TYPES[q.jobType]?.label||q.jobType}</span></td>
+          <td>${q.result?q.result.totalM2.toFixed(0)+' m²':'—'}</td>
+          <td style="font-weight:700;">${q.result?fmt(q.result.scenarios.recommended.total):'—'}</td>
+          <td style="font-size:13px;">${q.createdAt?new Date(q.createdAt).toLocaleDateString('es-NZ'):'—'}</td>
+          <td>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <button class="btn btn-outline btn-sm" onclick="loadQuote('${q.id}')">Abrir</button>
+              <button class="btn btn-amber btn-sm"   onclick="loadAndPDF('${q.id}')">PDF</button>
+              <button class="btn btn-primary btn-sm" onclick="openClientProfile('${q.id}')">👤 Perfil</button>
+              <button class="btn btn-danger btn-sm"  onclick="delQuoteConfirm('${q.id}')">✕</button>
+            </div>
+          </td>
+        </tr>`).join('')}
+      </tbody>
+    </table></div></div>`}
+  </div>`;
+}
+
+// ---- Productos ----
+function renderProductos() {
+  const all=DB.getProducts(); const shown=PFILTER==='all'?all:all.filter(p=>p.type===PFILTER);
+  document.getElementById('view-productos').innerHTML = `
+  <div class="fadein">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;">
+      <div><h1 class="ff-display" style="font-size:30px;font-weight:700;color:#1A3C34;">Base de Datos de Productos</h1></div>
+      <div style="display:flex;gap:10px;"><button class="btn btn-outline btn-sm" onclick="resetProds()">↺ Restablecer</button><button class="btn btn-amber" onclick="openProdModal(null)">+ Nuevo</button></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:16px;">${['all',...Object.keys(PROD_TYPES)].map(t => `<button onclick="PFILTER='${t}'; renderProductos()" class="btn btn-sm ${PFILTER===t?'btn-primary':'btn-outline'}">${t==='all'?'Todos':PROD_TYPES[t]}</button>`).join('')}</div>
+    <div class="card"><div style="overflow-x:auto;"><table class="tbl"><thead><tr><th>Nombre</th><th>Marca</th><th>Tipo</th><th>Envase</th><th>$/Envase</th><th>$/Litro</th><th>Rendimiento</th><th>Acciones</th></tr></thead>
+      <tbody>${shown.map(p => `<tr><td style="font-weight:600;">${p.name}</td><td><span class="bdg ${p.brand==='Resene'?'bdg-forest':'bdg-amber'}">${p.brand}</span></td><td>${PROD_TYPES[p.type]||p.type}</td><td>${p.containerSize}L</td><td>${fmt(p.pricePerContainer)}</td><td>${fmt(p.pricePerLitre)}</td><td>${p.coverage} m²/L</td><td><button class="btn btn-outline btn-sm" onclick="openProdModal('${p.id}')">Editar</button><button class="btn btn-danger btn-sm" onclick="delProd('${p.id}')">✕</button></td></tr>`).join('')}</tbody></table></div></div></div>`;
+}
+function openProdModal(pid){
+  const prods=DB.getProducts(); const p=pid?prods.find(x=>x.id===pid):null;
+  document.getElementById('modal-box').innerHTML = `<div class="card-header"><h2 class="ff-display">${p?'Editar':'Nuevo'} Producto</h2><button class="btn btn-ghost btn-sm" onclick="closeModal()">✕</button></div>
+  <div class="card-body"><div class="g2" style="gap:16px;">
+    <div style="grid-column:1/-1;"><label class="lbl">Nombre *</label><input id="pm-name" class="inp" value="${p?.name||''}"></div>
+    <div><label class="lbl">Marca *</label><select id="pm-brand" class="inp"><option ${p?.brand==='Resene'?'selected':''}>Resene</option><option ${p?.brand==='Dulux'?'selected':''}>Dulux</option><option>Otra</option></select></div>
+    <div><label class="lbl">Tipo *</label><select id="pm-type" class="inp">${Object.entries(PROD_TYPES).map(([k,v])=>`<option value="${k}" ${p?.type===k?'selected':''}>${v}</option>`).join('')}</select></div>
+    <div><label class="lbl">Envase (L)</label><input id="pm-cont" class="inp" type="number" value="${p?.containerSize||4}" step="0.5"></div>
+    <div><label class="lbl">Precio/envase *</label><input id="pm-pricec" class="inp" type="number" value="${p?.pricePerContainer||''}" step="0.5"></div>
+    <div><label class="lbl">Precio/litro</label><input id="pm-pricel" class="inp" type="number" value="${p?.pricePerLitre||''}" step="0.5"></div>
+    <div><label class="lbl">Rendimiento (m²/L) *</label><input id="pm-cov" class="inp" type="number" value="${p?.coverage||12}" step="0.5"></div></div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;"><button class="btn btn-outline" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="saveProd('${pid||''}')">Guardar</button></div></div>`;
+  document.getElementById('modal-bg').style.display='block'; document.getElementById('modal-wrap').style.display='flex';
+}
+function closeModal(){ document.getElementById('modal-bg').style.display='none'; document.getElementById('modal-wrap').style.display='none'; }
+function saveProd(eid){
+  const name=document.getElementById('pm-name').value.trim(), brand=document.getElementById('pm-brand').value, type=document.getElementById('pm-type').value;
+  const cs=parseFloat(document.getElementById('pm-cont').value)||4, pc=parseFloat(document.getElementById('pm-pricec').value)||0;
+  const pl=parseFloat(document.getElementById('pm-pricel').value)||+(pc/cs).toFixed(2), cov=parseFloat(document.getElementById('pm-cov').value)||12;
+  if(!name){ alert('Nombre obligatorio'); return; }
+  const prods=DB.getProducts(); const prod={id:eid||gid(),name,brand,type,containerSize:cs,pricePerContainer:pc,pricePerLitre:pl,coverage:cov};
+  if(eid){ const i=prods.findIndex(p=>p.id===eid); if(i>=0) prods[i]=prod; } else prods.push(prod);
+  DB.saveProducts(prods); closeModal(); notify('✓ Producto guardado'); renderProductos();
+}
+function delProd(id){ if(!confirm('¿Eliminar producto?')) return; DB.saveProducts(DB.getProducts().filter(p=>p.id!==id)); notify('Producto eliminado','err'); renderProductos(); }
+function resetProds(){ if(!confirm('¿Restaurar productos por defecto?')) return; DB.saveProducts(DEFAULT_PRODUCTS); notify('✓ Restaurados'); renderProductos(); }
+
+// ---- Configuración ----
+function renderConfig(){
+  const co    = DB.getCompany();
+  const lbr   = DB.getLabor();
+  const scope = DB.getScope();   // <-- Nueva línea agregada
+
+  document.getElementById('view-config').innerHTML = `
+  <div class="fadein">
+    <h1 class="ff-display" style="font-size:30px;font-weight:700;color:#1A3C34;margin-bottom:24px;">Configuración</h1>
+    <div class="g2" style="align-items:start;gap:24px;">
+
+      <!-- Empresa -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="ff-display" style="font-size:19px;font-weight:600;color:#1A3C34;">Datos de la Empresa</h2>
+          <p style="font-size:13px;color:#8A8179;margin-top:3px;">Aparecerán en el presupuesto PDF generado</p>
+        </div>
+        <div class="card-body" style="display:flex;flex-direction:column;gap:18px;">
+          <!-- Logo -->
+          <div>
+            <label class="lbl">Logo de la empresa</label>
+            <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+              <div id="logo-prev" style="width:80px;height:80px;border-radius:12px;border:2px dashed #E3DDD5;display:flex;align-items:center;justify-content:center;background:#FAFAF8;overflow:hidden;flex-shrink:0;">
+                ${co.logo ? `<img src="${co.logo}" style="width:100%;height:100%;object-fit:contain;">` : '<span style="font-size:30px;">🖼️</span>'}
+              </div>
+              <div>
+                <input type="file" id="logo-file" accept="image/*" style="display:none;" onchange="uploadLogo(this)">
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                  <button class="btn btn-outline btn-sm" onclick="document.getElementById('logo-file').click()">Subir logo</button>
+                  ${co.logo ? `<button class="btn btn-danger btn-sm" onclick="removeLogo()">Quitar logo</button>` : ''}
+                </div>
+                <div style="font-size:12px;color:#8A8179;margin-top:6px;">PNG, JPG o SVG. Máx 2MB.</div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <label class="lbl">Nombre de la empresa *</label>
+            <input id="co-name" class="inp" type="text" value="${co.name}" placeholder="Wellington Painting Co.">
+          </div>
+          <div>
+            <label class="lbl">Teléfono</label>
+            <input id="co-ph" class="inp" type="tel" value="${co.phone}" placeholder="04 555 1234">
+          </div>
+          <div>
+            <label class="lbl">Email</label>
+            <input id="co-em" class="inp" type="email" value="${co.email}" placeholder="info@empresa.co.nz">
+          </div>
+          <div>
+            <label class="lbl">Dirección</label>
+            <input id="co-addr" class="inp" type="text" value="${co.address}" placeholder="Wellington, NZ">
+          </div>
+          <div>
+            <label class="lbl">Número GST</label>
+            <input id="co-gst" class="inp" type="text" value="${co.gst||''}" placeholder="12-345-678">
+          </div>
+          <button class="btn btn-primary" onclick="saveCoConfig()" style="width:100%;">💾 Guardar Datos Empresa</button>
+        </div>
+      </div>
+
+      <!-- Columna derecha: tarifas + alcance -->
+      <div style="display:flex;flex-direction:column;gap:20px;">
+        <!-- Tarifas Mano de Obra -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="ff-display" style="font-size:19px;font-weight:600;color:#1A3C34;">Tarifas de Mano de Obra</h2>
+            <p style="font-size:13px;color:#8A8179;margin-top:3px;">Costo por trabajador por hora (NZD)</p>
+          </div>
+          <div class="card-body">
+            <div>
+              <label class="lbl">Tarifa por trabajador/hora</label>
+              <div style="display:flex;align-items:center;gap:10px;">
+                <span style="font-size:18px;">$</span>
+                <input id="lbw" class="inp" type="number" value="${lbr.ratePerWorker||40}" min="0" step="2" style="max-width:140px;">
+                <span style="font-size:13px;color:#6B6559;">/hora</span>
+              </div>
+            </div>
+            <button class="btn btn-primary" onclick="saveLbrConfig()" style="width:100%;margin-top:16px;">💾 Guardar Tarifa</button>
+          </div>
+        </div>
+
+        <!-- Márgenes info -->
+        <div class="card" style="background:#FDF5E8;border:1px solid #FAE8C7;">
+          <div class="card-body">
+            <div style="font-size:15px;font-weight:700;color:#B87018;margin-bottom:10px;">💡 Márgenes por defecto</div>
+            <div style="font-size:13px;color:#6B6559;line-height:1.7;">
+              Los márgenes de ganancia se configuran en cada cotización de tipo <strong>Costo Real</strong> (Paso 4 del wizard).<br><br>
+              Valores predeterminados:<br>
+              • Base: <strong>10%</strong><br>
+              • Recomendado: <strong>35%</strong><br>
+              • Premium: <strong>45%</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Alcance del Trabajo (NUEVO) -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="ff-display" style="font-size:19px;font-weight:600;color:#1A3C34;">Alcance del Trabajo (Pricing Options)</h2>
+            <p style="font-size:13px;color:#8A8179;">Describe qué incluye cada nivel de cotización</p>
+          </div>
+          <div class="card-body">
+            <div style="margin-bottom:16px;">
+              <label class="lbl">Base</label>
+              <textarea id="sc-basic" class="inp" rows="4">${scope.basic}</textarea>
+            </div>
+            <div style="margin-bottom:16px;">
+              <label class="lbl">Recomendado</label>
+              <textarea id="sc-rec" class="inp" rows="4">${scope.recommended}</textarea>
+            </div>
+            <div style="margin-bottom:16px;">
+              <label class="lbl">Premium</label>
+              <textarea id="sc-prem" class="inp" rows="4">${scope.premium}</textarea>
+            </div>
+            <button class="btn btn-primary" onclick="saveScopeConfig()" style="width:100%;">💾 Guardar Alcance</button>
+          </div>
+        </div>
+
+        <!-- Idioma - NUEVO BLOQUE -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="ff-display" style="font-size:19px;font-weight:600;color:#1A3C34;">${t('language')}</h2>
+          </div>
+          <div class="card-body">
+            <label class="lbl">${t('select_language')}</label>
+            <select id="lang-select" class="inp" onchange="setLanguage(this.value)">
+              <option value="es" ${currentLang === 'es' ? 'selected' : ''}>Español</option>
+              <option value="en" ${currentLang === 'en' ? 'selected' : ''}>English</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+function saveCoConfig(){ const co=DB.getCompany(); DB.saveCompany({ name:document.getElementById('co-name').value, phone:document.getElementById('co-ph').value, email:document.getElementById('co-em').value, address:document.getElementById('co-addr').value, gst:document.getElementById('co-gst').value, logo:co.logo }); notify('Datos de empresa guardados'); }
+function saveLbrConfig(){ DB.saveLabor({ ratePerWorker:parseFloat(document.getElementById('lbw').value)||40 }); notify('Tarifa guardada'); }
+function uploadLogo(input){ const file=input.files[0]; if(!file) return; if(file.size>2*1024*1024){ alert('Imagen muy grande (máx 2MB)'); return; } const reader=new FileReader(); reader.onload=e=>{ const co=DB.getCompany(); co.logo=e.target.result; DB.saveCompany(co); document.getElementById('logo-prev').innerHTML=`<img src="${e.target.result}" style="width:100%;height:100%;object-fit:contain;">`; notify('Logo subido'); }; reader.readAsDataURL(file); }
+function removeLogo(){ const co=DB.getCompany(); co.logo=null; DB.saveCompany(co); notify('Logo eliminado','err'); renderConfig(); }
+
+// ---- PDF Generation (con nota de plantas y andamios) ----
+function generatePDF() {
+  if (!QD || !QR) { notify('No hay datos para el PDF','err'); return; }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+  const co = DB.getCompany();
+  const r  = QR;
+  const { base:B, recommended:RC, premium:PR } = r.scenarios;
+  const qn = qNum(QD.id || gid());
+  const dt = todayStr();
+
+  const C = {
+    forest: [26,60,52], amber: [212,135,27], cream: [248,246,241], lGray: [240,237,231],
+    mGray: [200,195,188], dark: [28,28,28], mid: [107,101,89], white: [255,255,255],
+    lGreen: [220,233,229], lAmber: [253,245,232],
+  };
+
+  const W=210, H=297, M=18; let y=0;
+  const fill=(x,fy,w,h,col)=>{ doc.setFillColor(...col); doc.rect(x,fy,w,h,'F'); };
+  const line=(x1,y1,x2,y2,col,lw=0.3)=>{ doc.setDrawColor(...col); doc.setLineWidth(lw); doc.line(x1,y1,x2,y2); };
+  const text=(t,x,ty,opts)=>doc.text(String(t),x,ty,opts||{});
+  const sf=(style,size,col)=>{ doc.setFont('helvetica',style); doc.setFontSize(size); if(col) doc.setTextColor(...col); };
+
+  // Header
+  fill(0,0,W,52,C.forest);
+  let headerTextX = M;
+  if (co.logo) { try { const fmt2 = co.logo.split(';')[0].split('/')[1].toUpperCase().replace('SVG+XML','PNG'); doc.addImage(co.logo, fmt2, M, 8, 30, 30); headerTextX = M+36; } catch(e) {} }
+  sf('bold',18,C.white); text(co.name, headerTextX, 20);
+  sf('normal',8.5,[128,181,168]); if(co.address) text(co.address, headerTextX,28);
+  const contactLine = [co.phone,co.email].filter(Boolean).join('  |  ');
+  if(contactLine) text(contactLine, headerTextX,35);
+  if(co.gst) text(`GST No: ${co.gst}`, headerTextX,42);
+  sf('bold',16,C.amber); text('PAINTING QUOTATION', W-M, 18, {align:'right'});
+  sf('bold',9,C.white); text(`Quote No: ${qn}`, W-M, 27, {align:'right'});
+  sf('normal',8.5,[128,181,168]); text(`Date: ${dt}`, W-M, 34, {align:'right'}); text('Valid for 30 days', W-M, 41, {align:'right'});
+  y=58;
+
+  const bW = (W - M*2 - 6)/2;
+  fill(M, y, bW, 44, C.cream); fill(M+bW+6, y, bW, 44, C.lGreen);
+  sf('bold',7.5,C.mid); text('BILL TO / CLIENT', M+4, y+8);
+  sf('bold',10.5,C.dark); text(QD.client.name||'Client Name', M+4, y+16);
+  sf('normal',8.5,C.mid); if(QD.client.address) text(QD.client.address, M+4, y+23);
+  if(QD.client.phone) text(`Tel: ${QD.client.phone}`, M+4, y+30);
+  if(QD.client.email) text(QD.client.email, M+4, y+37);
+  const bx = M+bW+10;
+  sf('bold',7.5,C.mid); text('PROJECT DETAILS', bx, y+8);
+  sf('bold',10.5,C.dark); text(JOB_TYPES[QD.jobType]?.en||QD.jobType, bx, y+16);
+  sf('normal',8.5,C.mid); text(`Total Area: ${r.totalM2.toFixed(1)} m²`, bx, y+23);
+  text(`Coats: ${QD.coats}  |  Workers: ${QD.workers}  |  Hours: ${QD.hours}h`, bx, y+30);
+  text(`Mode: ${QD.mode==='m2'?'Per m²':'Actual Cost'}`, bx, y+37);
+  y+=50;
+
+  // ========== TABLA DE ITEMS VISIBLES (SOLO EXTRAS) ==========
+  // Filtramos: Fixed Item, Filler/Putty, Equipment, Service, Extra Material
+  const visibleItems = r.items.filter(it => 
+    ['Fixed Item', 'Filler/Putty', 'Equipment', 'Service', 'Extra Material'].includes(it.cat)
+  );
+  
+  if (visibleItems.length > 0) {
+    fill(M, y, W-M*2, 8.5, C.forest); sf('bold',9,C.white); text('ADDITIONAL COSTS & SERVICES', M+4, y+6); y+=12;
+    fill(M, y, W-M*2, 7, C.lGray); sf('bold',7.5,C.mid);
+    const cX=[M+2, M+34, M+108, M+138, M+162];
+    text('CAT.', cX[0], y+5); text('DESCRIPTION', cX[1], y+5); text('QTY', cX[2], y+5); text('UNIT COST', cX[3], y+5); text('TOTAL', cX[4], y+5); y+=9;
+
+    visibleItems.forEach((it,idx)=>{
+      if(y>248){ doc.addPage(); y=18; fill(M,y,W-M*2,7,C.lGray); sf('bold',7.5,C.mid); text('CAT.',cX[0],y+5); text('DESCRIPTION',cX[1],y+5); text('QTY',cX[2],y+5); text('UNIT COST',cX[3],y+5); text('TOTAL',cX[4],y+5); y+=9; }
+      if(idx%2===0) fill(M, y-1, W-M*2, 9, [252,251,249]);
+      sf('normal',7.5,C.mid); text(it.cat, cX[0], y+5);
+      sf('normal',8,C.dark); text(it.desc, cX[1], y+5);
+      sf('normal',8,C.dark); text(`${it.qty} ${it.unit}`, cX[2], y+5);
+      sf('normal',8,C.dark); text('$'+fmtN(it.unitCost), cX[3], y+5);
+      sf('bold',8,C.dark); text('$'+fmtN(it.total), cX[4], y+5);
+      line(M, y+7, W-M, y+7, C.lGray, 0.2); y+=9;
+    });
+    y+=6;
+  } else {
+    // Si no hay extras, mostramos un mensaje opcional
+    fill(M, y, W-M*2, 8.5, C.forest); sf('bold',9,C.white); text('ADDITIONAL COSTS', M+4, y+6); y+=12;
+    fill(M, y, W-M*2, 10, C.lGray); sf('normal',8,C.mid); text('No additional costs or services included.', M+4, y+6.5);
+    y+=14;
+  }
+  y+=6;
+
+  // ========== PRICING OPTIONS (SIN MATERIALS, LABOUR, MARGIN) ==========
+  if (y > 210) { doc.addPage(); y = 18; }
+  fill(M, y, W-M*2, 8.5, C.forest);
+  sf('bold', 9, C.white); text('PRICING OPTIONS — Choose the package that suits you best', M+4, y+6);
+  y += 12;
+
+  const scope = DB.getScope();
+  const scenW = (W - M*2 - 8) / 3;
+  const scenDefs = [
+    { s:B,  label:'BASE',          bg:C.lGray,  hdr:C.forest, note:'Entry level pricing',      desc: scope.basic },
+    { s:RC, label:'RECOMMENDED *', bg:C.lAmber, hdr:C.amber,  note:'Best value — most popular', desc: scope.recommended },
+    { s:PR, label:'PREMIUM',       bg:C.lGreen, hdr:C.forest, note:'Premium quality finish',    desc: scope.premium },
+  ];
+
+  // Calcular altura necesaria para cada columna (ahora con menos filas)
+  const columnHeights = scenDefs.map(sd => {
+    let h = 11; // header
+    h += 13;    // espacio inicial
+    // Solo 2 filas: Subtotal + GST (ya no hay Materials, Labour, Margin)
+    h += 2*7 + 4 + 7 + 7; // dos filas de texto, línea, subtotal y GST
+    h += 13;   // total bar
+    h += 6;    // nota
+    if (sd.desc) {
+      const descLines = doc.splitTextToSize(sd.desc, scenW - 6);
+      h += descLines.length * 4 + 4;
+    }
+    return h;
+  });
+  const maxColumnHeight = Math.max(...columnHeights) + 4;
+  const baseY = y;
+
+  scenDefs.forEach((sd, i) => {
+    const sx = M + i*(scenW+4);
+    const colH = columnHeights[i];
+    fill(sx, y, scenW, 11, sd.hdr);
+    sf('bold', 9.5, C.white); text(sd.label, sx+scenW/2, y+7.5, {align:'center'});
+
+    let sy = y + 13;
+    fill(sx, sy, scenW, colH - 11, sd.bg);
+
+    // Mostrar solo Subtotal y GST
+    sf('normal', 8, C.mid);  text('Subtotal (excl. GST):', sx+3, sy+5);
+    sf('normal', 8, C.dark); text('$'+fmtN(sd.s.subtotal), sx+scenW-3, sy+5, {align:'right'}); sy += 7;
+    sf('normal', 8, C.mid);  text('GST (15%):', sx+3, sy+5);
+    sf('normal', 8, C.dark); text('$'+fmtN(sd.s.gst), sx+scenW-3, sy+5, {align:'right'}); sy += 7;
+
+    // Total bar
+    fill(sx, sy+1, scenW, 13, sd.hdr);
+    sf('bold', 10, C.white);
+    text('TOTAL  $'+fmtN(sd.s.total), sx+scenW/2, sy+9, {align:'center'});
+    sy += 14;
+
+    sf('normal', 7, C.mid); text(sd.note, sx+scenW/2, sy+4, {align:'center'});
+    sy += 6;
+
+    if (sd.desc) {
+      const descLines = doc.splitTextToSize(sd.desc, scenW - 6);
+      sf('normal', 7, C.mid);
+      descLines.forEach(line => {
+        text(line, sx+3, sy+4);
+        sy += 4;
+      });
+    }
+  });
+
+  y = baseY + maxColumnHeight + 6;
+
+  // Terms & Conditions (incluye la nota de plantas y andamios)
+  if(y>240){ doc.addPage(); y=18; }
+  fill(M, y, W-M*2, 7.5, C.lGray); sf('bold',8.5,C.dark); text('TERMS & CONDITIONS', M+4, y+5.5);
+  y+=10;
+  const terms = [
+    '• A 50% deposit is required upon acceptance to confirm the booking and schedule commencement.',
+    '• Remaining balance is due upon satisfactory completion of all agreed works.',
+    '• This quotation is valid for 30 days from the date above. After this period, prices may be subject to change.',
+    '• Any unforeseen structural issues, extensive surface repairs, or additional preparation work will be quoted separately.',
+    '• All prices include GST at 15%. ' + (co.gst ? `GST Registration No: ${co.gst}.` : ''),
+    '• Paint colours and finishes as agreed with client. Any changes to specification may affect the final price.',
+    '• Client to ensure clear and safe access to all areas requiring painting on agreed commencement date.',
+    '• When working outdoors near plants and gardens, surrounding vegetation may be affected due to the nature of the work. To minimise potential damage, the use of scaffolding is strongly recommended.',
+  ];
+  sf('normal',7.5,C.mid);
+  terms.forEach(t => {
+    const lines = doc.splitTextToSize(t, W - M * 2 - 4);
+    lines.forEach(line => {
+      if (y > 270) { doc.addPage(); y = 18; }
+      text(line, M+2, y);
+      y += 5;
+    });
+    y += 2;
+  });
+
+  // Acceptance
+  y+=5;
+  if(y>270){ doc.addPage(); y=18; }
+  fill(M, y, W-M*2, 7.5, C.forest); sf('bold',8.5,C.white); text('ACCEPTANCE', M+4, y+5.5);
+  y+=12;
+  sf('normal',8,C.mid); text('I/We accept the above quotation and authorise work to proceed:', M+2, y); y+=10;
+  line(M+2, y, M+80, y, C.dark, 0.5); line(M+100, y, M+170, y, C.dark, 0.5);
+  y+=5; sf('normal',7.5,C.mid); text('Signature', M+2, y); text('Date', M+100, y);
+
+  // Footer
+  fill(0, H-13, W, 13, C.forest);
+  sf('normal',7.5,[128,181,168]); text(`${co.name}  ·  ${co.address||'Wellington, NZ'}  ·  ${contactLine}`, W/2, H-4, {align:'center'});
+  sf('normal',7,[90,140,128]); text(`Generated by Pintura Pro Calculator  ·  ${dt}  ·  ${qn}`, W/2, H-9.5, {align:'center'});
+
+  doc.save(`${qn}-${(QD.client.name||'quote').replace(/[^a-z0-9]/gi,'-').toLowerCase()}.pdf`);
+  notify('✓ PDF generado correctamente');
+}
+
+// Init
+function saveScopeConfig() {
+  const basic = document.getElementById('sc-basic')?.value || '';
+  const rec   = document.getElementById('sc-rec')?.value   || '';
+  const prem  = document.getElementById('sc-prem')?.value  || '';
+  DB.saveScope({ basic, recommended: rec, premium: prem });
+  notify('✓ Alcance de trabajo guardado');
+}
+document.addEventListener('DOMContentLoaded', () => {
+  // Cargar idioma guardado
+  const savedLang = localStorage.getItem('ppc_lang');
+  if (savedLang && TRANSLATIONS[savedLang]) currentLang = savedLang;
+  
+  showView('dashboard');
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+});
+// ================================================================
+// PERFIL DEL CLIENTE
+// ================================================================
+
+// Extender DB con métodos de perfiles
+Object.assign(DB, {
+  getProfiles:       ()  => JSON.parse(localStorage.getItem('ppc_profiles') || '[]'),
+  getProfileById:    (id)=> DB.getProfiles().find(p => p.id === id),
+  getProfileByName:  (name) => DB.getProfiles().find(p =>
+    p.clientName?.toLowerCase().trim() === name?.toLowerCase().trim()
+  ),
+  saveProfile: (profile) => {
+    const all = DB.getProfiles();
+    const i   = all.findIndex(p => p.id === profile.id);
+    if (i >= 0) all[i] = profile; else all.push(profile);
+    localStorage.setItem('ppc_profiles', JSON.stringify(all));
+  },
+  deleteProfile: (id) => {
+    localStorage.setItem('ppc_profiles',
+      JSON.stringify(DB.getProfiles().filter(p => p.id !== id)));
+  },
+});
+
+// Estado del perfil abierto
+let currentProfile    = null;
+let activeProfileTab  = 'info';
+
+// ---- Helper: obtener todas las cotizaciones de un cliente ----
+function getClientQuotes(clientName) {
+  const allQuotes = DB.getQuotes();
+  return allQuotes.filter(q =>
+    (q.client?.name || '').toLowerCase().trim() === (clientName || '').toLowerCase().trim()
+  );
+}
+// ---- Abrir perfil desde una cotización ----
+function openClientProfile(quoteId) {
+  const quote = DB.getQuoteById(quoteId);
+  if (!quote) return;
+  const clientName = quote.client?.name || '';
+
+  let profile = DB.getProfileByName(clientName);
+  if (!profile) {
+    profile = {
+      id:               gid(),
+      clientName:       clientName,
+      clientEmail:      quote.client?.email   || '',
+      clientPhone:      quote.client?.phone   || '',
+      clientAddress:    quote.client?.address || '',
+      firstContactDate: quote.createdAt
+        ? new Date(quote.createdAt).toISOString().split('T')[0]
+        : new Date().toISOString().split('T')[0],
+      photos:        [],
+      technicalInfo: { colors:'', paintTypes:'', notes:'' },
+      payments:      [],
+      notes:         '',
+    };
+    DB.saveProfile(profile);
+  } else {
+    // Rellenar campos vacíos con datos de la cotización
+    if (!profile.clientEmail   && quote.client?.email)   profile.clientEmail   = quote.client.email;
+    if (!profile.clientPhone   && quote.client?.phone)   profile.clientPhone   = quote.client.phone;
+    if (!profile.clientAddress && quote.client?.address) profile.clientAddress = quote.client.address;
+  }
+
+  currentProfile   = profile;
+  activeProfileTab = 'info';
+
+  document.getElementById('profile-overlay').style.display = 'block';
+  document.body.style.overflow = 'hidden';
+  renderProfileView();
+}
+
+function closeProfileView() {
+  saveProfileTabData(activeProfileTab); // guardar antes de cerrar
+  DB.saveProfile(currentProfile);
+  document.getElementById('profile-overlay').style.display = 'none';
+  document.body.style.overflow = '';
+  currentProfile = null;
+}
+
+// ---- Render principal del overlay ----
+function renderProfileView() {
+  if (!currentProfile) return;
+  const p = currentProfile;
+
+  const tabs = [
+    { id:'info',      label:'👤 Información' },
+    { id:'photos',    label:'📷 Fotos'       },
+    { id:'history',   label:'📋 Historial'   },
+    { id:'technical', label:'🎨 Técnico'     },
+    { id:'payments',  label:'💰 Pagos'       },
+    { id:'notes',     label:'📝 Notas'       },
+  ];
+
+  document.getElementById('profile-content').innerHTML = `
+  <div class="fadein">
+    <!-- Header del perfil -->
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:24px;">
+      <div>
+        <button class="btn btn-ghost btn-sm" onclick="closeProfileView()" style="margin-bottom:8px;">← Volver a Guardadas</button>
+        <h1 class="ff-display" style="font-size:30px;font-weight:700;color:#1A3C34;">Perfil del Cliente</h1>
+        <p style="color:#6B6559;margin-top:4px;font-size:16px;font-weight:600;">${p.clientName}</p>
+      </div>
+      <button class="btn btn-primary btn-lg" onclick="saveCurrentProfile()">💾 Guardar perfil</button>
+    </div>
+
+    <!-- Pestañas -->
+    <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:0;margin-bottom:20px;border-bottom:2px solid #E3DDD5;">
+      ${tabs.map(t => `
+        <button onclick="switchProfileTab('${t.id}')"
+          style="flex-shrink:0;padding:10px 16px;border:none;border-radius:10px 10px 0 0;
+                 font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;
+                 margin-bottom:-2px;border-bottom:2px solid transparent;
+                 ${activeProfileTab===t.id
+                   ? 'background:#1A3C34;color:#fff;border-bottom-color:#1A3C34;'
+                   : 'background:#F0EDE7;color:#6B6559;'}"
+        >${t.label}</button>
+      `).join('')}
+    </div>
+
+    <!-- Contenido de la pestaña -->
+    <div id="profile-tab-content" class="fadein"></div>
+  </div>`;
+
+  renderProfileTab();
+}
+
+function switchProfileTab(tab) {
+  saveProfileTabData(activeProfileTab);
+  activeProfileTab = tab;
+  renderProfileView();
+}
+
+function renderProfileTab() {
+  const el = document.getElementById('profile-tab-content');
+  if (!el) return;
+  const map = {
+    info:      renderProfInfo,
+    photos:    renderProfPhotos,
+    history:   renderProfHistory,
+    technical: renderProfTechnical,
+    payments:  renderProfPayments,
+    notes:     renderProfNotes,
+  };
+  const fn = map[activeProfileTab];
+  if (fn) { el.innerHTML = fn(); el.className = 'fadein'; }
+}
+
+// ---- PESTAÑA: INFORMACIÓN ----
+function renderProfInfo() {
+  const p = currentProfile;
+  const quotes = getClientQuotes(p.clientName);
+  const totalBill = quotes.reduce((s,q)=>s+(q.result?.scenarios?.recommended?.total||0),0);
+  const totalArea = quotes.reduce((s,q)=>s+(q.result?.totalM2||0),0);
+  const totalPaid = (p.payments||[])
+    .filter(pay=>pay.status==='Pagado'||pay.status==='Parcial')
+    .reduce((s,pay)=>s+(parseFloat(pay.amount)||0),0);
+  const pending = totalBill - totalPaid;
+  
+  const lastQuote = quotes.length > 0 ? quotes.reduce((a,b) => 
+    (a.createdAt||'') > (b.createdAt||'') ? a : b
+  ) : null;
+  
+  const lastPayment = (p.payments||[]).length > 0 ? p.payments.reduce((a,b) =>
+    (a.date||'') > (b.date||'') ? a : b
+  ) : null;
+  
+  const colorEntries = (p.technicalInfo?.colorEntries || []).filter(c => c.code && c.code.trim());
+  const hasColors = colorEntries.length > 0;
+  const hasPaintTypes = p.technicalInfo?.paintTypes && p.technicalInfo.paintTypes.trim();
+  const hasTechNotes = p.technicalInfo?.notes && p.technicalInfo.notes.trim();
+  const totalPhotos = (p.photos||[]).length;
+  const beforePhotos = (p.photos||[]).filter(ph => ph.type === 'before').length;
+  const afterPhotos = (p.photos||[]).filter(ph => ph.type === 'after').length;
+  const hasNotes = p.notes && p.notes.trim();
+
+  const sections = [];
+  
+  sections.push({ title: '💰 Resumen Financiero', content: `
+    <div class="g3" style="gap:12px;margin-top:12px;">
+      <div style="background:#F0F5F3;border-radius:12px;padding:16px;text-align:center;">
+        <div class="ff-display" style="font-size:24px;font-weight:700;color:#1A3C34;">${quotes.length}</div>
+        <div style="font-size:11px;color:#6B6559;font-weight:600;">Cotizaciones</div>
+      </div>
+      <div style="background:#FDF5E8;border-radius:12px;padding:16px;text-align:center;">
+        <div class="ff-display" style="font-size:20px;font-weight:700;color:#D4871B;">${fmt(totalBill)}</div>
+        <div style="font-size:11px;color:#6B6559;font-weight:600;">Facturado</div>
+      </div>
+      <div style="background:${pending>0?'#FEE2E2':'#DCFCE7'};border-radius:12px;padding:16px;text-align:center;">
+        <div class="ff-display" style="font-size:20px;font-weight:700;color:${pending>0?'#DC2626':'#15803D'};">${fmt(Math.max(0,pending))}</div>
+        <div style="font-size:11px;color:#6B6559;font-weight:600;">${pending>0?'Pendiente':'Al día ✅'}</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:24px;margin-top:12px;font-size:13px;color:#6B6559;flex-wrap:wrap;">
+      <span>📐 Área total: <strong>${totalArea.toFixed(0)} m²</strong></span>
+      ${lastQuote ? `<span>📅 Última cotización: <strong>${new Date(lastQuote.createdAt).toLocaleDateString('es-NZ')}</strong></span>` : ''}
+      ${lastPayment ? `<span>💳 Último pago: <strong>${new Date(lastPayment.date+'T00:00:00').toLocaleDateString('es-NZ')} — ${fmt(lastPayment.amount)}</strong></span>` : ''}
+    </div>
+  `});
+  
+  if (lastQuote || (p.payments||[]).some(pay=>pay.date)) {
+    const invoicePayment = (p.payments||[]).find(pay => pay.type === 'factura');
+    sections.push({ title: '📅 Fechas Clave', content: `
+      <div style="display:flex;gap:24px;font-size:13px;color:#6B6559;flex-wrap:wrap;">
+        ${lastQuote ? `<span>📋 Cotización: <strong>${new Date(lastQuote.createdAt).toLocaleDateString('es-NZ')}</strong></span>` : ''}
+        ${invoicePayment ? `<span>🧾 Factura: <strong>${new Date(invoicePayment.date+'T00:00:00').toLocaleDateString('es-NZ')}</strong></span>` : ''}
+        ${lastPayment ? `<span>💳 Último pago: <strong>${new Date(lastPayment.date+'T00:00:00').toLocaleDateString('es-NZ')}</strong></span>` : ''}
+      </div>
+    `});
+  }
+  
+  if (hasColors) {
+    sections.push({ title: '🎨 Colores Registrados', content: `
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;">
+        ${colorEntries.map(ce => `
+        <div style="display:flex;align-items:center;gap:8px;background:#FAFAF8;padding:8px 12px;border-radius:8px;border:1px solid #E3DDD5;">
+          <div style="width:24px;height:24px;border-radius:50%;background-color:#${ce.code||'ccc'};border:2px solid #B0B0B0;box-shadow: 1px 2px 4px rgba(0,0,0,0.3);flex-shrink:0;"></div>
+          <span style="font-family:monospace;font-size:12px;font-weight:600;">#${ce.code}</span>
+          ${ce.desc ? `<span style="font-size:12px;color:#6B6559;">${ce.desc}</span>` : ''}
+        </div>
+        `).join('')}
+      </div>
+    `});
+  }
+  
+  if (hasPaintTypes) {
+    sections.push({ title: '🖌️ Pinturas y Productos Usados', content: `
+      <p style="font-size:13px;color:#6B6559;margin-top:6px;white-space:pre-line;">${p.technicalInfo.paintTypes}</p>
+    `});
+  }
+  
+  if (hasTechNotes) {
+    sections.push({ title: '🔧 Notas Técnicas', content: `
+      <p style="font-size:13px;color:#6B6559;margin-top:6px;white-space:pre-line;">${p.technicalInfo.notes}</p>
+    `});
+  }
+  
+  if (totalPhotos > 0) {
+    sections.push({ title: '📷 Fotos del Proyecto', content: `
+      <div style="display:flex;gap:16px;font-size:13px;color:#6B6559;margin-top:6px;">
+        <span>📸 Antes: <strong>${beforePhotos}</strong></span>
+        <span>✨ Después: <strong>${afterPhotos}</strong></span>
+        <span>📁 Total: <strong>${totalPhotos}</strong></span>
+      </div>
+    `});
+  }
+  
+  if (hasNotes) {
+    sections.push({ title: '📝 Notas Generales', content: `
+      <p style="font-size:13px;color:#6B6559;margin-top:6px;white-space:pre-line;">${p.notes}</p>
+    `});
+  }
+
+  return `
+  <!-- FORMULARIO DE INFORMACIÓN GENERAL -->
+  <div class="card" style="margin-bottom:20px;">
+    <div class="card-header">
+      <h2 class="ff-display" style="font-size:19px;font-weight:600;color:#1A3C34;">Información General</h2>
+    </div>
+    <div class="card-body">
+      <div class="g2" style="gap:18px;">
+        <div>
+          <label class="lbl">Nombre completo</label>
+          <input id="pf-name" class="inp" type="text" value="${p.clientName||''}" placeholder="Nombre del cliente">
+        </div>
+        <div>
+          <label class="lbl">Fecha de primer contacto</label>
+          <input id="pf-date" class="inp" type="date" value="${p.firstContactDate||''}">
+        </div>
+        <div>
+          <label class="lbl">Teléfono</label>
+          <input id="pf-phone" class="inp" type="tel" value="${p.clientPhone||''}" placeholder="021 123 4567">
+        </div>
+        <div>
+          <label class="lbl">Email</label>
+          <input id="pf-email" class="inp" type="email" value="${p.clientEmail||''}" placeholder="correo@ejemplo.com">
+        </div>
+        <div style="grid-column:1/-1;">
+          <label class="lbl">Dirección</label>
+          <input id="pf-address" class="inp" type="text" value="${p.clientAddress||''}" placeholder="Dirección del cliente">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESUMEN GENERAL -->
+  <div class="card">
+    <div class="card-header" style="background:linear-gradient(135deg,#1A3C34,#265248);">
+      <h2 class="ff-display" style="font-size:20px;font-weight:600;color:#fff;">📊 Resumen General del Cliente</h2>
+      <p style="font-size:12px;color:#80B5A8;margin-top:4px;">${p.clientName}</p>
+    </div>
+    <div class="card-body" style="display:flex;flex-direction:column;gap:24px;">
+      ${sections.length > 0 ? sections.map(s => `
+        <div>
+          <div style="font-size:14px;font-weight:700;color:#1A3C34;margin-bottom:4px;">${s.title}</div>
+          ${s.content}
+        </div>
+      `).join('<div style="height:1px;background:#F0EDE7;"></div>') : `
+        <p style="color:#8A8179;text-align:center;padding:24px 0;">
+          Aún no hay información registrada. Completa las otras pestañas para ver el resumen aquí.
+        </p>
+      `}
+    </div>
+  </div>`;
+}
+
+// ---- PESTAÑA: FOTOS ----
+function renderProfPhotos() {
+  const photos  = currentProfile.photos || [];
+  const before  = photos.filter(ph => ph.type === 'before');
+  const after   = photos.filter(ph => ph.type === 'after');
+
+  const grid = (list) => {
+    if (!list.length) return `<p style="color:#8A8179;font-size:13px;padding:8px 0;">No hay fotos en esta categoría.</p>`;
+    return `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;">
+      ${list.map(ph => `
+      <div style="border-radius:12px;overflow:hidden;border:2px solid #E3DDD5;position:relative;background:#fff;">
+        <img src="${ph.dataUrl}" onclick="openPhotoViewer('${ph.id}')"
+  style="width:100%;height:145px;object-fit:cover;display:block;cursor:pointer;"
+  title="Clic para ampliar">
+<div style="display:flex;gap:6px;padding:4px 10px 6px;">
+  <button onclick="downloadProfilePhoto('${ph.id}')"
+    style="font-size:11px;padding:3px 8px;background:#1A3C34;color:#fff;border:none;border-radius:6px;cursor:pointer;">
+    ⬇ Descargar
+  </button>
+</div>
+        <div style="padding:8px 10px;">
+          <div style="font-size:12.5px;font-weight:600;color:#1C1C1C;truncate:">${ph.caption||'Sin descripción'}</div>
+          <div style="font-size:11px;color:#8A8179;margin-top:2px;">${ph.date||''}</div>
+        </div>
+        <button onclick="deleteProfilePhoto('${ph.id}')"
+          style="position:absolute;top:7px;right:7px;width:26px;height:26px;border-radius:50%;
+                 background:rgba(220,38,38,.88);border:none;color:#fff;cursor:pointer;font-size:13px;
+                 font-weight:bold;line-height:1;display:flex;align-items:center;justify-content:center;">✕</button>
+      </div>`).join('')}
+    </div>`;
+  };
+
+  return `
+  <div>
+    <!-- Subir fotos -->
+    <div class="card" style="margin-bottom:20px;">
+      <div class="card-header">
+        <h2 class="ff-display" style="font-size:18px;font-weight:600;color:#1A3C34;">Subir Fotos</h2>
+      </div>
+      <div class="card-body">
+        <div class="g2" style="gap:14px;margin-bottom:16px;align-items:end;">
+          <div>
+            <label class="lbl">Tipo de foto</label>
+            <select id="photo-type" class="inp">
+              <option value="before">📸 Antes (Before)</option>
+              <option value="after">✨ Después (After)</option>
+            </select>
+          </div>
+          <div>
+            <label class="lbl">Descripción (opcional)</label>
+            <input id="photo-caption" class="inp" type="text" placeholder="Ej: Sala norte – antes de preparar">
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+          <input type="file" id="photo-file" accept="image/*" multiple style="display:none;" onchange="uploadProfilePhotos(this)">
+          <button class="btn btn-amber" onclick="document.getElementById('photo-file').click()">
+            📷 Seleccionar fotos
+          </button>
+          <span style="font-size:12px;color:#8A8179;">Puedes seleccionar varias fotos a la vez. Máx 5 MB c/u.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Galería ANTES -->
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-header" style="background:#FEF3C7;">
+        <h2 class="ff-display" style="font-size:18px;font-weight:600;color:#B45309;">📸 Antes — ${before.length} foto${before.length!==1?'s':''}</h2>
+      </div>
+      <div class="card-body">${grid(before)}</div>
+    </div>
+
+    <!-- Galería DESPUÉS -->
+    <div class="card">
+      <div class="card-header" style="background:#DCFCE7;">
+        <h2 class="ff-display" style="font-size:18px;font-weight:600;color:#15803D;">✨ Después — ${after.length} foto${after.length!==1?'s':''}</h2>
+      </div>
+      <div class="card-body">${grid(after)}</div>
+    </div>
+  </div>`;
+}
+
+function uploadProfilePhotos(input) {
+  const files = Array.from(input.files);
+  if (!files.length) return;
+  const type    = document.getElementById('photo-type')?.value || 'before';
+  const caption = document.getElementById('photo-caption')?.value || '';
+  const date    = new Date().toLocaleDateString('es-NZ');
+  let done = 0;
+  const total = files.length;
+
+  const processFile = (file) => {
+    const ext = file.name.split('.').pop().toLowerCase();
+    const isHEIC = ext === 'heic' || ext === 'heif' || file.type === 'image/heic' || file.type === 'image/heif';
+
+    if (isHEIC) {
+      // Convertir HEIC a blob PNG/JPEG con heic2any
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const buffer = e.target.result;
+        heic2any({ blob: new Blob([buffer], { type: file.type }), toType: 'image/jpeg', quality: 0.85 })
+          .then((convertedBlob) => {
+            // Convertir el blob resultante a Data URL y seguir el proceso normal
+            const url = URL.createObjectURL(convertedBlob);
+            const img = new Image();
+            img.onload = () => {
+              compressAndStore(img, file.name);
+              URL.revokeObjectURL(url);
+            };
+            img.onerror = () => {
+              notify(`"${file.name}" no se pudo procesar (HEIC)`, 'err');
+              done++;
+            };
+            img.src = url;
+          })
+          .catch(() => {
+            notify(`"${file.name}" error al convertir HEIC`, 'err');
+            done++;
+          });
+      };
+      reader.readAsArrayBuffer(file);
+      return;
+    }
+
+    // Para formatos normales (JPEG, PNG, WebP, etc.)
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        compressAndStore(img, file.name);
+      };
+      img.onerror = () => {
+        notify(`"${file.name}" no pudo procesarse`, 'err');
+        done++;
+      };
+      img.src = e.target.result;
+    };
+    reader.onerror = () => {
+      notify(`"${file.name}" error al leer`, 'err');
+      done++;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Función común para comprimir y guardar
+  const compressAndStore = (img, fileName) => {
+    const MAX_W = 1200;
+    let w = img.width, h = img.height;
+    if (w > MAX_W || h > MAX_W) {
+      const ratio = Math.min(MAX_W / w, MAX_W / h);
+      w = Math.round(w * ratio);
+      h = Math.round(h * ratio);
+    }
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0, w, h);
+    const compressed = canvas.toDataURL('image/jpeg', 0.85);
+
+    if (!currentProfile.photos) currentProfile.photos = [];
+    currentProfile.photos.push({
+      id: gid(),
+      type,
+      dataUrl: compressed,
+      caption,
+      date,
+      fileName: fileName
+    });
+    done++;
+    if (done === total) {
+      DB.saveProfile(currentProfile);
+      renderProfileView();
+      notify(`✓ ${total} foto${total > 1 ? 's' : ''} agregada${total > 1 ? 's' : ''}`);
+    }
+  };
+
+  // Iniciar procesamiento
+  files.forEach(file => {
+    const validExts = ['jpg', 'jpeg', 'png', 'webp', 'heic', 'heif', 'avif', 'bmp', 'gif'];
+    const ext = file.name.split('.').pop().toLowerCase();
+    if (!validExts.includes(ext) && !file.type.startsWith('image/')) {
+      notify(`"${file.name}" no es un formato de imagen válido`, 'err');
+      done++;
+      return;
+    }
+    processFile(file);
+  });
+}
+function deleteProfilePhoto(photoId) {
+  if (!confirm('¿Eliminar esta foto?')) return;
+  currentProfile.photos = (currentProfile.photos||[]).filter(ph => ph.id !== photoId);
+  DB.saveProfile(currentProfile);
+  renderProfileView();
+  notify('Foto eliminada','err');
+}
+// ---- Visor de foto ampliada ----
+// Visor de fotos con navegación, marca de agua (logo) y pie con título + dirección
+function openPhotoViewer(photoId) {
+  if (!currentProfile) return;
+  const photos = currentProfile.photos || [];
+  const index = photos.findIndex(p => p.id === photoId);
+  if (index === -1) return;
+
+  const company = DB.getCompany();
+  const logoUrl = company.logo; // puede ser null
+
+  // Contenedor principal del visor (fondo oscuro)
+  const overlay = document.createElement('div');
+  overlay.id = 'photo-viewer-overlay';
+  overlay.style.cssText = `
+    position: fixed; inset: 0; z-index: 9999;
+    background: rgba(0,0,0,0.92);
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column;
+    cursor: pointer;
+  `;
+
+  // Área de la imagen (con canvas para dibujar marca de agua)
+  const imgContainer = document.createElement('div');
+  imgContainer.style.cssText = `
+    position: relative; max-width: 90vw; max-height: 80vh;
+    display: flex; justify-content: center; align-items: center;
+    cursor: default;
+  `;
+  
+  const canvas = document.createElement('canvas');
+  canvas.style.cssText = 'max-width: 100%; max-height: 100%; display: block; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.5);';
+  imgContainer.appendChild(canvas);
+  
+  // Botón cerrar (✕)
+  const closeBtn = document.createElement('button');
+  closeBtn.textContent = '✕';
+  closeBtn.style.cssText = `
+    position: fixed; top: 20px; right: 20px; width: 44px; height: 44px;
+    background: rgba(0,0,0,0.7); color: white; border: 2px solid white;
+    border-radius: 50%; font-size: 24px; font-weight: bold;
+    cursor: pointer; z-index: 10000; display: flex; align-items: center;
+    justify-content: center; transition: 0.2s;
+  `;
+  closeBtn.onmouseenter = () => closeBtn.style.background = '#D4871B';
+  closeBtn.onmouseleave = () => closeBtn.style.background = 'rgba(0,0,0,0.7)';
+  
+  // Botones de navegación
+  const prevBtn = document.createElement('button');
+  prevBtn.textContent = '◀';
+  prevBtn.style.cssText = `
+    position: fixed; left: 20px; top: 50%; transform: translateY(-50%);
+    background: rgba(0,0,0,0.6); color: white; border: none;
+    width: 50px; height: 50px; border-radius: 50%; font-size: 28px;
+    cursor: pointer; z-index: 10000; transition: 0.2s;
+  `;
+  prevBtn.onmouseenter = () => prevBtn.style.background = '#D4871B';
+  prevBtn.onmouseleave = () => prevBtn.style.background = 'rgba(0,0,0,0.6)';
+  
+  const nextBtn = document.createElement('button');
+  nextBtn.textContent = '▶';
+  nextBtn.style.cssText = `
+    position: fixed; right: 20px; top: 50%; transform: translateY(-50%);
+    background: rgba(0,0,0,0.6); color: white; border: none;
+    width: 50px; height: 50px; border-radius: 50%; font-size: 28px;
+    cursor: pointer; z-index: 10000; transition: 0.2s;
+  `;
+  nextBtn.onmouseenter = () => nextBtn.style.background = '#D4871B';
+  nextBtn.onmouseleave = () => nextBtn.style.background = 'rgba(0,0,0,0.6)';
+
+  // Pie de foto (título + dirección)
+  const captionDiv = document.createElement('div');
+  captionDiv.style.cssText = `
+    position: fixed; bottom: 20px; left: 0; right: 0;
+    text-align: center; color: white; background: rgba(0,0,0,0.6);
+    padding: 12px 20px; margin: 0 auto; width: fit-content;
+    max-width: 90%; border-radius: 40px; backdrop-filter: blur(5px);
+    font-family: sans-serif; pointer-events: none;
+  `;
+
+  overlay.appendChild(closeBtn);
+  overlay.appendChild(prevBtn);
+  overlay.appendChild(nextBtn);
+  overlay.appendChild(imgContainer);
+  overlay.appendChild(captionDiv);
+  document.body.appendChild(overlay);
+
+  let currentIndex = index;
+  let currentImage = new Image();
+  
+  // Cargar y dibujar la foto actual con marca de agua
+  function loadAndDrawPhoto(idx) {
+    const photo = photos[idx];
+    if (!photo) return;
+    captionDiv.innerHTML = `
+      <div style="font-weight: bold; font-size: 16px; margin-bottom: 4px;">${escapeHtml(photo.caption || 'Sin descripción')}</div>
+      <div style="font-size: 13px; opacity: 0.8;">📍 ${escapeHtml(currentProfile.clientAddress || 'Dirección no disponible')}</div>
+    `;
+    
+    const img = new Image();
+    img.onload = () => {
+      currentImage = img;
+      // Ajustar tamaño del canvas al de la imagen escalada (pero manteniendo resolución original)
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      
+      // Aplicar marca de agua (logo) si existe
+      if (logoUrl) {
+        const logoImg = new Image();
+        logoImg.onload = () => {
+          // 1. Logo pequeño en esquina superior derecha
+          const smallSize = 60;
+          const smallX = canvas.width - smallSize - 15;
+          const smallY = 15;
+          ctx.drawImage(logoImg, smallX, smallY, smallSize, smallSize);
+          
+          // 2. Logo grande central con opacidad
+          const maxCenterSize = 150;
+          let centerW = logoImg.width;
+          let centerH = logoImg.height;
+          if (centerW > maxCenterSize || centerH > maxCenterSize) {
+            const ratio = Math.min(maxCenterSize / centerW, maxCenterSize / centerH);
+            centerW *= ratio;
+            centerH *= ratio;
+          }
+          const centerX = (canvas.width - centerW) / 2;
+          const centerY = (canvas.height - centerH) / 2;
+          ctx.globalAlpha = 0.25;
+          ctx.drawImage(logoImg, centerX, centerY, centerW, centerH);
+          ctx.globalAlpha = 1.0;
+        };
+        logoImg.src = logoUrl;
+      }
+      
+      // Ajustar tamaño visual del canvas para que no desborde
+      const maxW = window.innerWidth * 0.9;
+      const maxH = window.innerHeight * 0.8;
+      let displayW = canvas.width, displayH = canvas.height;
+      if (displayW > maxW || displayH > maxH) {
+        const ratio = Math.min(maxW / displayW, maxH / displayH);
+        displayW *= ratio;
+        displayH *= ratio;
+      }
+      canvas.style.width = `${displayW}px`;
+      canvas.style.height = `${displayH}px`;
+    };
+    img.src = photo.dataUrl;
+  }
+  
+  function showPrev() {
+    if (photos.length === 0) return;
+    currentIndex = (currentIndex - 1 + photos.length) % photos.length;
+    loadAndDrawPhoto(currentIndex);
+  }
+  
+  function showNext() {
+    if (photos.length === 0) return;
+    currentIndex = (currentIndex + 1) % photos.length;
+    loadAndDrawPhoto(currentIndex);
+  }
+  
+  // Eventos
+  closeBtn.onclick = (e) => { e.stopPropagation(); overlay.remove(); };
+  prevBtn.onclick = (e) => { e.stopPropagation(); showPrev(); };
+  nextBtn.onclick = (e) => { e.stopPropagation(); showNext(); };
+  overlay.onclick = (e) => {
+    if (e.target === overlay) overlay.remove();
+  };
+  
+  // Cargar la primera foto
+  loadAndDrawPhoto(currentIndex);
+}
+
+// Helper para escapar HTML y evitar inyección
+function escapeHtml(str) {
+  if (!str) return '';
+  return str.replace(/[&<>]/g, function(m) {
+    if (m === '&') return '&amp;';
+    if (m === '<') return '&lt;';
+    if (m === '>') return '&gt;';
+    return m;
+  });
+}
+
+function downloadProfilePhoto(photoId) {
+  const photo = (currentProfile.photos||[]).find(p => p.id === photoId);
+  if (!photo) return;
+  const a = document.createElement('a');
+  a.href = photo.dataUrl;
+  a.download = photo.fileName || 'foto.jpg';
+  a.click();
+  notify('✓ Foto descargada');
+}
+// ---- PESTAÑA: HISTORIAL ----
+function renderProfHistory() {
+  const quotes = DB.getQuotes().filter(q =>
+    q.client?.name?.toLowerCase().trim() === currentProfile.clientName?.toLowerCase().trim()
+  );
+
+  if (!quotes.length) return `
+    <div class="card"><div class="card-body" style="text-align:center;padding:60px 24px;">
+      <div style="font-size:48px;margin-bottom:12px;">📋</div>
+      <p style="color:#6B6559;font-weight:600;">No hay trabajos registrados para este cliente.</p>
+    </div></div>`;
+
+  return `
+  <div class="card">
+    <div class="card-header">
+      <h2 class="ff-display" style="font-size:19px;font-weight:600;color:#1A3C34;">Historial de Trabajos (${quotes.length})</h2>
+    </div>
+    <div style="overflow-x:auto;">
+      <table class="tbl">
+        <thead><tr>
+          <th>N° Cot.</th><th>Fecha</th><th>Tipo</th><th>Área</th>
+          <th>Modo</th><th>Precio Base</th><th>Recomendado</th><th>Premium</th><th>Acciones</th>
+        </tr></thead>
+        <tbody>
+          ${quotes.map(q => `
+          <tr>
+            <td style="font-weight:700;color:#D4871B;font-family:monospace;font-size:12px;">${qNum(q.id)}</td>
+            <td style="white-space:nowrap;font-size:13px;">${q.createdAt?new Date(q.createdAt).toLocaleDateString('es-NZ'):'—'}</td>
+            <td><span class="bdg bdg-forest">${JOB_TYPES[q.jobType]?.icon||''} ${JOB_TYPES[q.jobType]?.label||q.jobType}</span></td>
+            <td>${q.result?q.result.totalM2.toFixed(0)+' m²':'—'}</td>
+            <td><span class="bdg ${q.mode==='m2'?'bdg-forest':'bdg-amber'}">${q.mode==='m2'?'m²':'Costo Real'}</span></td>
+            <td>${q.result?fmt(q.result.scenarios.base.total):'—'}</td>
+            <td style="font-weight:700;color:#1A3C34;">${q.result?fmt(q.result.scenarios.recommended.total):'—'}</td>
+            <td>${q.result?fmt(q.result.scenarios.premium.total):'—'}</td>
+            <td>
+              <div style="display:flex;gap:6px;">
+                <button class="btn btn-outline btn-sm" onclick="closeProfileView(); loadQuote('${q.id}')">Ver</button>
+                <button class="btn btn-amber btn-sm"   onclick="loadAndPDF('${q.id}')">PDF</button>
+              </div>
+            </td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+// ---- PESTAÑA: TÉCNICO ----
+function renderProfTechnical() {
+  const ti = currentProfile.technicalInfo || {};
+const colorEntries = ti.colorEntries || [];
+  return `
+  <div class="card">
+    <div class="card-header">
+      <h2 class="ff-display" style="font-size:19px;font-weight:600;color:#1A3C34;">Información Técnica</h2>
+    </div>
+    <div class="card-body" style="display:flex;flex-direction:column;gap:20px;">
+      <!-- Selector de colores -->
+<div>
+  <label class="lbl">Colores utilizados</label>
+  <div id="color-entries-list" style="margin-bottom:12px; display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+    ${colorEntries.map((ce,i) => `
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:0;background:#FAFAF8;padding:10px 14px;border-radius:12px;border:1px solid #E3DDD5;">
+      <!-- Círculo tipo tapa de bote con sombra definida -->
+      <div style="flex-shrink:0; width:60px; height:60px; border-radius:50%;
+                  background-color: #${ce.code||'ccc'};
+                  border: 4px solid #B0B0B0;
+                  box-shadow: 2px 4px 6px rgba(0,0,0,0.35), inset 0 -2px 3px rgba(0,0,0,0.1);
+                  position: relative;
+                  overflow: hidden;">
+        <div style="position:absolute; top:5px; left:9px; width:8px; height:4px; background:rgba(255,255,255,0.8); border-radius:50%; transform:rotate(-20deg);"></div>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:4px;">
+        <span style="font-family:monospace;font-size:14px;font-weight:700;color:#1A3C34;">#${ce.code||'---'}</span>
+        <input type="text" class="inp" style="max-width:100%;" value="${ce.desc||''}"
+          oninput="updateColorDesc('${ce.id}', this.value)" placeholder="Ej: Paredes sala">
+      </div>
+      <button class="btn btn-danger btn-sm" onclick="removeColorEntry('${ce.id}')" style="flex-shrink:0;">✕</button>
+    </div>
+    `).join('')}
+  </div>
+  <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+    <span style="font-size:13px;color:#6B6559;">#</span>
+    <input id="new-color-code" class="inp" style="max-width:100px;" type="text"
+      placeholder="F1F1F1" maxlength="6" oninput="previewColor(this.value)">
+    <input id="new-color-desc" class="inp" style="max-width:250px;flex:1;" type="text"
+      placeholder="Ej: Paredes sala">
+    <div id="color-preview" style="width:30px;height:30px;border-radius:4px;background:#ccc;border:2px solid #E3DDD5;flex-shrink:0;"></div>
+    <button class="btn btn-outline btn-sm" onclick="addColorEntry()">+ Agregar</button>
+  </div>
+</div>
+      <div>
+        <label class="lbl">Pinturas y productos usados</label>
+        <textarea id="tech-types" class="inp" rows="4"
+          placeholder="Ej: Resene Lumbersider (exterior), Resene SpaceCote Flat (interior)..."
+        >${ti.paintTypes||''}</textarea>
+      </div>
+      <div>
+        <label class="lbl">Notas técnicas del cliente</label>
+        <textarea id="tech-notes" class="inp" rows="5"
+          placeholder="Ej: Paredes con humedad en baño – requiere sellador especial antes del primer. Techo con manchas..."
+        >${ti.notes||''}</textarea>
+      </div>
+      <button class="btn btn-primary" onclick="saveProfTechnical()">💾 Guardar información técnica</button>
+    </div>
+  </div>`;
+}
+
+function previewColor(code) {
+  const preview = document.getElementById('color-preview');
+  if (preview && code) preview.style.background = '#' + code;
+}
+
+function addColorEntry() {
+  const code = document.getElementById('new-color-code')?.value?.trim() || 'ccc';
+  const desc = document.getElementById('new-color-desc')?.value?.trim() || '';
+  if (!currentProfile.technicalInfo) currentProfile.technicalInfo = {};
+  if (!currentProfile.technicalInfo.colorEntries) currentProfile.technicalInfo.colorEntries = [];
+  currentProfile.technicalInfo.colorEntries.push({ id: gid(), code, desc });
+  DB.saveProfile(currentProfile);
+  renderProfileView();
+}
+
+function updateColorDesc(id, value) {
+  const entries = currentProfile.technicalInfo?.colorEntries || [];
+  const entry = entries.find(e => e.id === id);
+  if (entry) { entry.desc = value; }
+}
+
+function removeColorEntry(id) {
+  if (!confirm('¿Eliminar este color?')) return;
+  currentProfile.technicalInfo.colorEntries = (currentProfile.technicalInfo.colorEntries || []).filter(e => e.id !== id);
+  DB.saveProfile(currentProfile);
+  renderProfileView();
+}
+
+function saveProfTechnical() {
+  if (!currentProfile.technicalInfo) currentProfile.technicalInfo = {};
+  currentProfile.technicalInfo.paintTypes = document.getElementById('tech-types')?.value || '';
+  currentProfile.technicalInfo.notes      = document.getElementById('tech-notes')?.value || '';
+  // colorEntries ya se guardaron al agregar/editar
+  DB.saveProfile(currentProfile);
+  notify('✓ Información técnica guardada');
+}
+
+// ---- PESTAÑA: PAGOS ----
+function renderProfPayments() {
+  const p       = currentProfile;
+  const pays    = p.payments || [];
+  const quotes  = DB.getQuotes().filter(q =>
+    q.client?.name?.toLowerCase().trim() === p.clientName?.toLowerCase().trim());
+
+  const totalBilled   = quotes.reduce((s,q)=>s+(q.result?.scenarios?.recommended?.total||0),0);
+  const totalPaid     = pays.filter(x=>x.status==='Pagado').reduce((s,x)=>s+(+x.amount||0),0);
+  const totalParcial  = pays.filter(x=>x.status==='Parcial').reduce((s,x)=>s+(+x.amount||0),0);
+  const totalReceived = totalPaid + totalParcial;
+  const pending       = totalBilled - totalReceived;
+
+  const statusStyle = (st) =>
+    st==='Pagado' ? 'bdg-green' : st==='Pendiente' ? 'bdg-red' : 'bdg-amber';
+  const statusIcon  = (st) =>
+    st==='Pagado' ? '✅' : st==='Pendiente' ? '⏳' : '🔶';
+
+  return `
+  <div>
+    <!-- Resumen financiero -->
+    <div class="g3" style="margin-bottom:20px;">
+      <div class="card"><div class="card-body" style="text-align:center;">
+        <div class="lbl" style="margin-bottom:8px;">Total Facturado</div>
+        <div class="ff-display" style="font-size:26px;font-weight:700;color:#1A3C34;">${fmt(totalBilled)}</div>
+        <div style="font-size:12px;color:#8A8179;margin-top:3px;">escenario recomendado</div>
+      </div></div>
+      <div class="card"><div class="card-body" style="text-align:center;">
+        <div class="lbl" style="margin-bottom:8px;">Total Recibido</div>
+        <div class="ff-display" style="font-size:26px;font-weight:700;color:#15803D;">${fmt(totalReceived)}</div>
+        <div style="font-size:12px;color:#8A8179;margin-top:3px;">pagos registrados</div>
+      </div></div>
+      <div class="card" style="border:2px solid ${pending>0?'#FCA5A5':'#86EFAC'};"><div class="card-body" style="text-align:center;">
+        <div class="lbl" style="margin-bottom:8px;">Saldo Pendiente</div>
+        <div class="ff-display" style="font-size:26px;font-weight:700;color:${pending>0?'#DC2626':'#15803D'};">${fmt(Math.max(0,pending))}</div>
+        <div style="font-size:12px;color:#8A8179;margin-top:3px;">${pending<=0?'✅ Al día':'⚠️ Pendiente de cobro'}</div>
+      </div></div>
+    </div>
+    ${(() => {
+      const lastInvoice = (p.payments||[]).filter(pay => pay.type === 'factura').sort((a,b) => (b.date||'').localeCompare(a.date||''))[0];
+      if (!lastInvoice || !lastInvoice.date) return '';
+      const dueDays = p.paymentConfig?.dueDays || 30;
+      const invoiceDate = new Date(lastInvoice.date + 'T00:00:00');
+      const dueDate = new Date(invoiceDate);
+      dueDate.setDate(dueDate.getDate() + dueDays);
+      const today = new Date(); today.setHours(0,0,0,0);
+      const diffDays = Math.ceil((dueDate - today) / (1000*60*60*24));
+      const percentLeft = (diffDays / dueDays) * 100;
+      if (diffDays > 0 && percentLeft > 10) return '';
+      const isOverdue = diffDays < 0;
+      const pendingAmount = Math.max(0, totalBilled - totalReceived);
+      if (pendingAmount <= 0) return '';
+      return `
+      <div class="card" style="margin-bottom:20px; border:2px solid ${isOverdue?'#DC2626':'#F59E0B'}; background:${isOverdue?'#FEF2F2':'#FFFBEB'};">
+        <div class="card-body" style="padding:16px;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <span style="font-size:28px;">${isOverdue?'🔴⚠️':'🟡⏰'}</span>
+            <div>
+              <div style="font-weight:700;font-size:15px;color:${isOverdue?'#DC2626':'#B45309'};">
+                ${isOverdue ? '¡PAGO VENCIDO! Esta cuenta está en mora.' : '¡ATENCIÓN! Queda menos del 10% del plazo.'}
+              </div>
+              <div style="font-size:13px;color:#6B6559;margin-top:4px;">
+                ${isOverdue 
+                  ? `Vencida desde ${dueDate.toLocaleDateString('es-NZ')} (hace ${Math.abs(diffDays)} días). Se recomienda contactar al cliente urgente.`
+                  : `Vence el ${dueDate.toLocaleDateString('es-NZ')} (en ${diffDays} días). Contactar al cliente para asegurar el pago.`
+                }
+                <br>Saldo pendiente: <strong>${fmt(pendingAmount)}</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>`;
+    })()}
+    <!-- Configuración de plazos e intereses -->
+    <div class="card" style="margin-bottom:20px;">
+      <div class="card-header">
+        <h2 class="ff-display" style="font-size:18px;font-weight:600;color:#1A3C34;">⚙️ Configuración de Cobranza</h2>
+      </div>
+      <div class="card-body">
+        <div class="g2" style="gap:14px;">
+          <div>
+            <label class="lbl">Días de plazo para pago</label>
+            <input id="cfg-due-days" class="inp" type="number" value="${p.paymentConfig?.dueDays || 30}" min="1" step="1" style="max-width:150px;">
+            <div style="font-size:12px;color:#8A8179;margin-top:4px;">Cuenta regresiva desde la fecha de factura</div>
+          </div>
+          <div>
+            <label class="lbl">Interés por mora (% mensual)</label>
+            <input id="cfg-interest" class="inp" type="number" value="${p.paymentConfig?.interestRate || 5}" min="0" max="100" step="0.5" style="max-width:150px;">
+            <div style="font-size:12px;color:#8A8179;margin-top:4px;">Aplica sobre saldo vencido</div>
+          </div>
+          <div style="grid-column:1/-1;">
+            <button class="btn btn-primary" onclick="savePaymentConfig()">💾 Guardar configuración</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    ${(() => {
+      const lastInvoice = (p.payments||[]).filter(pay => pay.type === 'factura').sort((a,b) => (b.date||'').localeCompare(a.date||''))[0];
+      if (!lastInvoice) return '';
+      const dueDays = p.paymentConfig?.dueDays || 30;
+      const invoiceDate = new Date(lastInvoice.date + 'T00:00:00');
+      const dueDate = new Date(invoiceDate);
+      dueDate.setDate(dueDate.getDate() + dueDays);
+      const today = new Date();
+      today.setHours(0,0,0,0);
+      const diffDays = Math.ceil((dueDate - today) / (1000*60*60*24));
+      const totalPeriod = dueDays;
+      const percentLeft = (diffDays / totalPeriod) * 100;
+      const isOverdue = diffDays < 0;
+      const isWarning = !isOverdue && percentLeft <= 10 && diffDays > 0;
+      
+      const pendingAmount = Math.max(0, totalBilled - totalReceived);
+      const monthsOverdue = isOverdue ? Math.ceil(Math.abs(diffDays) / 30) : 0;
+      const interestRate = p.paymentConfig?.interestRate || 5;
+      const interestAmount = isOverdue ? pendingAmount * (interestRate / 100) * monthsOverdue : 0;
+      
+      return `
+      <div class="card" style="margin-bottom:20px; border:2px solid ${isOverdue ? '#DC2626' : isWarning ? '#F59E0B' : '#10B981'};">
+        <div class="card-header" style="background:${isOverdue ? '#FEE2E2' : isWarning ? '#FEF3C7' : '#DCFCE7'};">
+          <h2 class="ff-display" style="font-size:18px;font-weight:600;color:${isOverdue ? '#DC2626' : isWarning ? '#B45309' : '#15803D'};">
+            ${isOverdue ? '⚠️ PAGO VENCIDO' : isWarning ? '⏰ PRÓXIMO A VENCER' : '✅ Plazo de pago vigente'}
+          </h2>
+        </div>
+        <div class="card-body">
+          <div style="display:flex;gap:24px;flex-wrap:wrap;font-size:13px;color:#6B6559;">
+            <span>🧾 Factura: <strong>${new Date(lastInvoice.date+'T00:00:00').toLocaleDateString('es-NZ')}</strong></span>
+            <span>📅 Vence: <strong>${dueDate.toLocaleDateString('es-NZ')}</strong></span>
+            <span>⏳ ${isOverdue ? `<span style="color:#DC2626;">Vencido hace ${Math.abs(diffDays)} días</span>` : `Quedan <strong>${diffDays}</strong> días`}</span>
+          </div>
+          <div class="pbar" style="margin-top:12px;">
+            <div class="pfill" style="width:${Math.min(100, Math.max(0, 100 - percentLeft))}%; background:${isOverdue ? '#DC2626' : isWarning ? '#F59E0B' : '#10B981'};"></div>
+          </div>
+          ${isOverdue && pendingAmount > 0 ? `
+          <div style="margin-top:12px;padding:12px;background:#FEE2E2;border-radius:8px;font-size:13px;color:#DC2626;">
+            ⚠️ Interés por mora (${interestRate}% mensual): <strong>+${fmt(interestAmount)}</strong><br>
+            <strong>Total a cobrar: ${fmt(pendingAmount + interestAmount)}</strong>
+          </div>` : ''}
+        </div>
+      </div>`;
+    })()}
+
+    <!-- Formulario nuevo pago -->
+    <div class="card" style="margin-bottom:20px;">
+      <div class="card-header">
+        <h2 class="ff-display" style="font-size:18px;font-weight:600;color:#1A3C34;">Registrar Pago</h2>
+      </div>
+      <div class="card-body">
+        <div class="g2" style="gap:14px;margin-bottom:16px;">
+          <div>
+          <div>
+            <label class="lbl">Fecha</label>
+            <input id="pay-date" class="inp" type="date" value="${new Date().toISOString().split('T')[0]}">
+          </div>
+          <div>
+            <label class="lbl">Tipo de registro</label>
+            <select id="pay-type" class="inp" onchange="if(this.value==='factura') document.getElementById('pay-desc').value='Factura emitida'; else document.getElementById('pay-desc').value='';">
+              <option value="pago">💳 Pago</option>
+              <option value="factura">🧾 Factura emitida</option>
+            </select>
+          </div>
+          <div>
+            <label class="lbl">Monto (NZD) *</label>
+            <input id="pay-amount" class="inp" type="number" placeholder="0.00" min="0" step="0.01">
+          </div>
+          <div>
+            <label class="lbl">Método de pago</label>
+            <select id="pay-method" class="inp">
+              <option>EFT / Transferencia bancaria</option>
+              <option>Efectivo</option>
+              <option>Tarjeta de crédito / débito</option>
+              <option>Cheque</option>
+              <option>Otro</option>
+            </select>
+          </div>
+          <div>
+            <label class="lbl">Estado</label>
+            <select id="pay-status" class="inp">
+              <option value="Pagado">✅ Pagado</option>
+              <option value="Pendiente">⏳ Pendiente</option>
+              <option value="Parcial">🔶 Parcial</option>
+            </select>
+          </div>
+          <div style="grid-column:1/-1;">
+            <label class="lbl">Descripción (opcional)</label>
+            <input id="pay-desc" class="inp" type="text"
+              placeholder="Ej: Depósito 50%, Pago final, Cuota 1 de 2...">
+          </div>
+        </div>
+        <button class="btn btn-amber" onclick="addProfilePayment()">+ Agregar pago</button>
+      </div>
+    </div>
+
+    <!-- Tabla de pagos -->
+    ${pays.length===0 ? `
+    <div class="card"><div class="card-body" style="text-align:center;padding:36px;">
+      <p style="color:#8A8179;">No hay pagos registrados aún.</p>
+    </div></div>` : `
+    <div class="card">
+      <div class="card-header">
+        <h2 class="ff-display" style="font-size:18px;font-weight:600;color:#1A3C34;">Registro de Pagos (${pays.length})</h2>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="tbl">
+          <thead><tr>
+            <th>Fecha</th><th>Descripción</th><th>Método</th><th>Estado</th><th>Monto</th><th>Acción</th>
+          </tr></thead>
+          <tbody>
+            ${pays.map(pay => `
+            <tr>
+              <td style="white-space:nowrap;">${pay.date||'—'}</td>
+              <td>${pay.description||'—'}</td>
+              <td>${pay.method||'—'}</td>
+              <td><span class="bdg ${statusStyle(pay.status)}">${statusIcon(pay.status)} ${pay.status}</span></td>
+              <td style="font-weight:700;">${fmt(pay.amount)}</td>
+              <td><button class="btn btn-danger btn-sm" onclick="deleteProfilePayment('${pay.id}')">✕</button></td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>`}
+  </div>`;
+}
+
+function savePaymentConfig() {
+  if (!currentProfile.paymentConfig) currentProfile.paymentConfig = {};
+  currentProfile.paymentConfig.dueDays = parseInt(document.getElementById('cfg-due-days')?.value) || 30;
+  currentProfile.paymentConfig.interestRate = parseFloat(document.getElementById('cfg-interest')?.value) || 5;
+  DB.saveProfile(currentProfile);
+  renderProfileView();
+  notify('✓ Configuración de cobranza guardada');
+}
+
+function addProfilePayment() {
+  const amount = parseFloat(document.getElementById('pay-amount')?.value) || 0;
+  // Permitir monto cero SOLO para facturas (así registras la fecha sin afectar saldo)
+  if (amount < 0) { notify('El monto no puede ser negativo', 'err'); return; }
+  const payType = document.getElementById('pay-type')?.value || 'pago';
+  if (payType === 'pago' && amount <= 0) { notify('Ingresa un monto válido para el pago', 'err'); return; }
+
+  if (!currentProfile.payments) currentProfile.payments = [];
+
+  // Para facturas, el estado por defecto es 'Pendiente' (no afecta el saldo)
+  const defaultStatus = payType === 'factura' ? 'Pendiente' : 'Pagado';
+  const status = document.getElementById('pay-status')?.value || defaultStatus;
+
+  currentProfile.payments.push({
+    id:          gid(),
+    date:        document.getElementById('pay-date')?.value   || '',
+    type:        payType,
+    amount,
+    method:      document.getElementById('pay-method')?.value || '',
+    status:      status,
+    description: document.getElementById('pay-desc')?.value   || '',
+  });
+  DB.saveProfile(currentProfile);
+  renderProfileView();
+  notify('✓ ' + (payType === 'factura' ? 'Factura' : 'Pago') + ' registrado correctamente');
+}
+
+function deleteProfilePayment(payId) {
+  if (!confirm('¿Eliminar este registro de pago?')) return;
+  currentProfile.payments = (currentProfile.payments||[]).filter(p => p.id !== payId);
+  DB.saveProfile(currentProfile);
+  renderProfileView();
+  notify('Pago eliminado','err');
+}
+
+// ---- PESTAÑA: NOTAS ----
+function renderProfNotes() {
+  return `
+  <div class="card">
+    <div class="card-header">
+      <h2 class="ff-display" style="font-size:19px;font-weight:600;color:#1A3C34;">Notas Generales del Cliente</h2>
+      <p style="font-size:13px;color:#8A8179;margin-top:3px;">
+        Preferencias, observaciones, comunicaciones importantes, recordatorios...
+      </p>
+    </div>
+    <div class="card-body">
+      <textarea id="pf-notes" class="inp" rows="18"
+        placeholder="Escribe cualquier información relevante sobre el cliente...
+
+Ej: Le gustan tonos neutros, siempre pide Low Sheen interior.
+Contactar sólo después de las 9am. Tiene perros – avisar antes de visitar.
+Prefiere cotizaciones por email. Pagos siempre por EFT.
+..."
+      >${currentProfile.notes||''}</textarea>
+      <button class="btn btn-primary" style="margin-top:16px;width:100%;" onclick="saveProfNotes()">
+        💾 Guardar notas
+      </button>
+    </div>
+  </div>`;
+}
+
+function saveProfNotes() {
+  currentProfile.notes = document.getElementById('pf-notes')?.value || '';
+  DB.saveProfile(currentProfile);
+  notify('✓ Notas guardadas');
+}
+
+// ---- Guardar datos del tab activo antes de cambiar ----
+function saveProfileTabData(tab) {
+  if (!currentProfile) return;
+  if (tab === 'info') {
+    const nameEl = document.getElementById('pf-name');
+    if (nameEl) {
+      currentProfile.clientName       = nameEl.value;
+      currentProfile.clientPhone      = document.getElementById('pf-phone')?.value   || '';
+      currentProfile.clientEmail      = document.getElementById('pf-email')?.value   || '';
+      currentProfile.clientAddress    = document.getElementById('pf-address')?.value || '';
+      currentProfile.firstContactDate = document.getElementById('pf-date')?.value    || '';
+    }
+  } else if (tab === 'notes') {
+    const el = document.getElementById('pf-notes');
+    if (el) currentProfile.notes = el.value;
+  } else if (tab === 'technical') {
+    const el = document.getElementById('tech-colors');
+    if (el) {
+      currentProfile.technicalInfo = {
+        colors:     el.value,
+        paintTypes: document.getElementById('tech-types')?.value || '',
+        notes:      document.getElementById('tech-notes')?.value || '',
+      };
+    }
+  }
+}
+
+// ---- Guardar perfil completo ----
+function saveCurrentProfile() {
+  if (!currentProfile) return;
+  saveProfileTabData(activeProfileTab);
+  DB.saveProfile(currentProfile);
+  notify('✓ Perfil guardado correctamente');
+}
+// ---- Abrir perfil desde alerta de cobranza ----
+function searchAndOpenProfile(name) {
+  const profile = DB.getProfileByName(name.trim());
+  if (profile) {
+    currentProfile = profile;
+    activeProfileTab = 'payments';
+    document.getElementById('profile-overlay').style.display = 'block';
+    document.body.style.overflow = 'hidden';
+    renderProfileView();
+  }
+}
+// ---- Abrir perfil desde el dashboard con input de búsqueda ----
+function openClientProfileFromDashboard() {
+  const name = prompt('Ingresa el nombre del cliente para buscar su perfil:');
+  if (!name || !name.trim()) return;
+  const profile = DB.getProfileByName(name.trim());
+  if (!profile) {
+    notify('No se encontró perfil para ese cliente. Crea una cotización primero.', 'err');
+    return;
+  }
+  currentProfile = profile;
+  activeProfileTab = 'info';
+  document.getElementById('profile-overlay').style.display = 'block';
+  document.body.style.overflow = 'hidden';
+  renderProfileView();
+}
+
+// Cerrar perfil con Escape
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && document.getElementById('profile-overlay')?.style.display === 'block') {
+    closeProfileView();
+  }
+});
+</script>
+</body>
+</html>
